@@ -10,9 +10,7 @@ const PORT = process.env.PORT || 5000;
 app.use(bodyParser.json());
 app.use(cors({
     origin: ["https://buyandgrabv.vercel.app","http://localhost:3000"],
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
-    
+
 }))
 app.use(bodyParser.urlencoded({ extended: true }));
 
