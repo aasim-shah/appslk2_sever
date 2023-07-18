@@ -23,19 +23,42 @@ app.get('/', (req, res) => {
 
 
 // New route for fetching data from CoinMarketCap API
-app.get('/fetch/latest', async (req, res) => {
-    const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c';
-    const url = 'https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/trending/latest';
-  
+app.get('/fetch/info/:id', async (req, res) => {
+    const {id} =req.params
+    // const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c'; //test keys
+    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
+    const url = `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?id=${id}`
     try {
-      const response = await axios.get  (url, {
+      const response = await axios.get(url, {
         headers: {
           'X-CMC_PRO_API_KEY': apiKey,
         },
       });
   
       // success
-      const data = response.data.data.data;
+      console.log({response : response.data.data[`${id}`].logo})
+      const data = response.data.data[`${id}`].logo;
+      res.json(data);
+    } catch (error) {
+      // error
+      console.log(error);
+      res.status(500).json({ error: 'An error occurred while fetching data.' });
+    }
+  });
+// New route for fetching data from CoinMarketCap API
+app.get('/fetch/latest', async (req, res) => {
+    // const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c'; //test keys
+    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
+    const url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          'X-CMC_PRO_API_KEY': apiKey,
+        },
+      });
+  
+      // success
+      const data = response.data.data;
       res.json(data);
     } catch (error) {
       // error
