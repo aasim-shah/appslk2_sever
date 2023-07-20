@@ -3,13 +3,13 @@ const bodyParser = require('body-parser');
 
 const cors = require("cors")
 const axios = require('axios');
-// const {Web3} = require('web3');
+const {Web3} = require('web3');
 // const os = require('os');
 // const net = require('net');
 // const ethers = require("ethers")
 
 const app = express();
-// const web3 = new Web3("https://fabled-wiser-tree.discover.quiknode.pro/9290e904b3d8dfec35d8e209d1189ca50778bb8d/");
+const web3 = new Web3("https://mainnet.infura.io/v3/3ada41439dc8493d98ef08873b1f8b26");
 
 // const endpoint = "https://fabled-wiser-tree.discover.quiknode.pro/9290e904b3d8dfec35d8e209d1189ca50778bb8d/"
 
@@ -29,12 +29,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 // Initial route
-app.get('/fetch/token_holders/:tokenId', async (req, res) => {
+app.get('/fetch/token_holders/:tokenId/:blockNumber', async (req, res) => {
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
     
-    const {tokenId} = req.params
-    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/`;
+    const {tokenId , blockNumber} = req.params
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/?block-height=${blockNumber}`;
     
     const headers = {
       'Content-Type': 'application/json',
@@ -55,12 +55,12 @@ app.get('/fetch/token_holders/:tokenId', async (req, res) => {
 
 
 
-app.get('/token/transfers' , (req , res) =>{
+app.get('/fetch/transactions/:wallet_address/:contract_address' , (req , res) =>{
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
-
-const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/address/0x781229c7a798c33ec788520a6bbe12a79ed657fc/transfers_v2/?contract-address=0x63f88a2298a5c4aee3c216aa6d926b184a4b2437`;
+// const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
+const {wallet_address , contract_address} = req.params
+const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/address/${wallet_address}/transfers_v2/?contract-address=${contract_address}`;
 
 const headers = {
   'Content-Type': 'application/json',
@@ -118,7 +118,6 @@ app.get('/fetch/info/:id', async (req, res) => {
         });
 
         // success
-        console.log({ response: response.data })
         const data = response.data.data[`${id}`].logo;
         res.json(data);
     } catch (error) {
@@ -128,10 +127,11 @@ app.get('/fetch/info/:id', async (req, res) => {
     }
 });
 // New route for fetching data from CoinMarketCap API
-app.get('/fetch/latest', async (req, res) => {
+app.get('/fetch/latest/:limit', async (req, res) => {
     // const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c'; //test keys
     const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
-    const url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+    const coinsWithPlatform = [];
+    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest`
     try {
         const response = await axios.get(url, {
             headers: {
@@ -141,7 +141,12 @@ app.get('/fetch/latest', async (req, res) => {
 
         // success
         const data = response.data.data;
-        res.json(data);
+        data.forEach(item =>{
+            if(item.platform){
+                coinsWithPlatform.push(item)
+            }
+        })
+        res.json(coinsWithPlatform);
     } catch (error) {
         // error
         console.error(error);
@@ -289,7 +294,9 @@ app.get('/get-eth-block-number', async (req, res) => {
 
         const raw = JSON.stringify({
             method: 'eth_blockNumber',
-            params: [],
+            params: {
+                    contract: "0x63f88a2298a5c4aee3c216aa6d926b184a4b2437"
+            },
             id: 1,
             jsonrpc: '2.0',
         });
@@ -311,34 +318,55 @@ app.get('/get-eth-block-number', async (req, res) => {
 });
 
 
-app.get("/getMeme", async (req, res) => {
-    const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c';
-    const url = "https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/trending/latest?time_period=30d";
-    const response = await axios.get(url, {
-        headers: {
-            'X-CMC_PRO_API_KEY': apiKey,
-        },
-    });
-
-    const data = response.data.data
-    console.log({ data })
-
-    const memecoins = [];
-    data.data.forEach(item => {
-
-        if (item.symbol.endsWith("ax3l")) {
-            memecoins.push(item);
-            console.log({ item })
+app.get("/getContractBlockNumber", async (req, res) => {
+    const contractAddress = '0x63f88a2298a5c4aee3c216aa6d926b184a4b2437'
+    const etherScanApi  = "DCTDFUMBRUUDBY7E9YXI7US45TB7HEU9B1"
+   
+async function getTransactionHashFromContractAddress(contractAddress) {
+    try {
+      const apiUrl = `https://api.etherscan.io/api?module=account&action=txlist&address=${contractAddress}&sort=asc&apikey=${etherScanApi}`;
+      
+      const response = await axios.get(apiUrl);
+      console.log({res : response.data})
+      const transactions = response.data.result;
+  
+      // Find the first transaction with a "to" address matching the contract address
+      for (const transaction of transactions) {
+        if (transaction.to.toLowerCase() === contractAddress.toLowerCase()) {
+            console.log({trxHash : transaction.hash})
+          return transaction.hash;
         }
-
-    })
-
-    res.json({ length: data.data.length, data: data.data })
-    //   const memecoins = await getTrendingMemecoins();
-
-    //   for (const memecoin of memecoins) {
-    //     console.log(memecoin.name, memecoin.symbol, memecoin.price_usd);
-    //   }
+      }
+  
+      console.log(`No deployment transaction found for contract address: ${contractAddress}`);
+      return null;
+    } catch (error) {
+      console.error('Error fetching transaction data:', error.message);
+      return null;
+    }
+  }
+  
+  async function getContractDeploymentBlock(contractAddress) {
+    try {
+      const transactionHash = await getTransactionHashFromContractAddress(contractAddress);
+      if (transactionHash) {    
+        // Now we have the transaction hash, we can use it to get the block number
+        const txReceipt = await web3.eth.getTransactionReceipt(transactionHash);
+        if (txReceipt) {
+          console.log(`Block Height of Contract Deployment (Tx Hash: ${transactionHash}):`, txReceipt.blockNumber.toString());
+          res.json({contractAddress , blockNumber : txReceipt.blockNumber.toString()})
+        } else {
+          console.log(`Transaction with hash ${transactionHash} not found or not confirmed yet.`);
+        }
+      } else {
+        console.log('Unable to find transaction hash for contract deployment.');
+      }
+    } catch (error) {
+      console.error(`Error getting the block height of Contract Deployment:`, error);
+    }
+  }
+  
+  getContractDeploymentBlock(contractAddress);
 })
 
 // 404 Route - Page Not Found
