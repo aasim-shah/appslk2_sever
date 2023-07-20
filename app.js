@@ -34,6 +34,7 @@ app.get('/fetch/token_holders/:tokenId/:blockNumber', async (req, res) => {
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
     
     const {tokenId , blockNumber} = req.params
+    console.log(req.params)
     const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/?block-height=${blockNumber}`;
     
     const headers = {
