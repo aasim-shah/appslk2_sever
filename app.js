@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 
 const cors = require("cors")
 const axios = require('axios');
-const {Web3} = require('web3');
+const { Web3 } = require('web3');
 // const os = require('os');
 // const net = require('net');
 // const ethers = require("ethers")
@@ -29,53 +29,58 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 // Initial route
-app.get('/fetch/token_holders/:tokenId', async (req, res) => {
+app.get('/fetch/token_holders/:tokenId/:blockCount', async (req, res) => {
 
-    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
+    console.log(req.params)
+    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key   
+    const { tokenId, blockCount } = req.params
+    const findBlockNumber =  await axios.get(`https://appslk-second.onrender.com/findBlockNumber/${tokenId}`)
+    const CoinBlockNumber = findBlockNumber.data
     
-    const {tokenId } = req.params
-    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/`;
-    
+    const NumBlockCount = parseInt(blockCount) + parseInt(CoinBlockNumber)
+    console.log(NumBlockCount)
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/?block-height=${NumBlockCount ? NumBlockCount : "7644841"}`;   
+
     const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${YOUR_API_KEY}`,
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
     };
-    
+
     axios
-      .get(apiUrl, { headers })
-      .then((response) => {
-        console.log(response.data);
-        return res.status(200).send(response.data.data.items);
-      })
-      .catch((error) => {
-        console.error('Error making the API call:', error.message);
-      });
-    
+        .get(apiUrl, { headers })
+        .then((response) => {
+            console.log(response.data);
+            return res.status(200).send(response.data.data.items);
+        })
+        .catch((error) => {
+            console.error('Error making the API call:', error.message);
+        });
+
 });
 
 
 
-app.get('/fetch/transactions/:wallet_address/:contract_address' , (req , res) =>{
+app.get('/fetch/transactions/:wallet_address/:contract_address', (req, res) => {
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-// const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
-const {wallet_address , contract_address} = req.params
-const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/address/${wallet_address}/transfers_v2/?contract-address=${contract_address}`;
+    // const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
+    const { wallet_address, contract_address } = req.params
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/address/${wallet_address}/transfers_v2/?contract-address=${contract_address}`;
 
-const headers = {
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${YOUR_API_KEY}`,
-};
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
+    };
 
-axios
-  .get(apiUrl, { headers })
-  .then((response) => {
-    console.log(response.data);
-    res.send(response.data.data)
-  })
-  .catch((error) => {
-    console.error('Error making the API call:', error);
-  });
+    axios
+        .get(apiUrl, { headers })
+        .then((response) => {
+            console.log(response.data);
+            res.send(response.data.data)
+        })
+        .catch((error) => {
+            console.error('Error making the API call:', error);
+        });
 
 
 })
@@ -142,8 +147,8 @@ app.get('/fetch/latestWithPlatform/:platform/:limit', async (req, res) => {
 
         // success
         const data = response.data.data;
-        data.forEach(item =>{
-            if(item.platform && item.platform.name === req.params.platform){
+        data.forEach(item => {
+            if (item.platform && item.platform.name === req.params.platform) {
                 coinsWithPlatform.push(item)
             }
         })
@@ -185,7 +190,7 @@ app.get('/fetch/trending', async (req, res) => {
 
         // success
         const data = response.data.coins;
-        console.log({data})
+        console.log({ data })
         res.json(data);
     } catch (error) {
         // error
@@ -317,7 +322,7 @@ app.get('/get-eth-block-number', async (req, res) => {
         const raw = JSON.stringify({
             method: 'eth_blockNumber',
             params: {
-                    contract: "0x63f88a2298a5c4aee3c216aa6d926b184a4b2437"
+                contract: "0x63f88a2298a5c4aee3c216aa6d926b184a4b2437"
             },
             id: 1,
             jsonrpc: '2.0',
@@ -331,7 +336,7 @@ app.get('/get-eth-block-number', async (req, res) => {
         };
 
         const response = await axios(requestOptions);
-        console.log({response})
+        console.log({ response })
         res.send(response.data);
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -340,56 +345,60 @@ app.get('/get-eth-block-number', async (req, res) => {
 });
 
 
-app.get("/getContractBlockNumber", async (req, res) => {
-    const contractAddress = '0x63f88a2298a5c4aee3c216aa6d926b184a4b2437'
-    const etherScanApi  = "DCTDFUMBRUUDBY7E9YXI7US45TB7HEU9B1"
-   
-async function getTransactionHashFromContractAddress(contractAddress) {
-    try {
-      const apiUrl = `https://api.etherscan.io/api?module=account&action=txlist&address=${contractAddress}&sort=asc&apikey=${etherScanApi}`;
-      
-      const response = await axios.get(apiUrl);
-      console.log({res : response.data})
-      const transactions = response.data.result;
-  
-      // Find the first transaction with a "to" address matching the contract address
-      for (const transaction of transactions) {
-        if (transaction.to.toLowerCase() === contractAddress.toLowerCase()) {
-            console.log({trxHash : transaction.hash})
-          return transaction.hash;
+
+app.get("/findBlockNumber/:contractAddress", async (req,res) =>{
+
+    const {contractAddress} = req.params
+    const etherScanApi = "DCTDFUMBRUUDBY7E9YXI7US45TB7HEU9B1"
+    async function getTransactionHashFromContractAddress(contractAddress) {
+        try {
+            const apiUrl = `https://api.etherscan.io/api?module=account&action=txlist&address=${contractAddress}&sort=asc&apikey=${etherScanApi}`;
+
+            const response = await axios.get(apiUrl);
+            console.log({ res: response.data })
+            const transactions = response.data.result;
+
+            // Find the first transaction with a "to" address matching the contract address
+            for (const transaction of transactions) {
+                if (transaction.to.toLowerCase() === contractAddress.toLowerCase()) {
+                    console.log({ trxHash: transaction.hash })
+                    return transaction.hash;
+                }
+            }
+
+            console.log(`No deployment transaction found for contract address: ${contractAddress}`);
+            return null;
+        } catch (error) {
+            console.error('Error fetching transaction data:', error.message);
+            return null;
         }
-      }
-  
-      console.log(`No deployment transaction found for contract address: ${contractAddress}`);
-      return null;
-    } catch (error) {
-      console.error('Error fetching transaction data:', error.message);
-      return null;
     }
-  }
-  
-  async function getContractDeploymentBlock(contractAddress) {
-    try {
-      const transactionHash = await getTransactionHashFromContractAddress(contractAddress);
-      if (transactionHash) {    
-        // Now we have the transaction hash, we can use it to get the block number
-        const txReceipt = await web3.eth.getTransactionReceipt(transactionHash);
-        if (txReceipt) {
-          console.log(`Block Height of Contract Deployment (Tx Hash: ${transactionHash}):`, txReceipt.blockNumber.toString());
-          res.json({contractAddress , blockNumber : txReceipt.blockNumber.toString()})
-        } else {
-          console.log(`Transaction with hash ${transactionHash} not found or not confirmed yet.`);
+
+    async function getContractDeploymentBlock(contractAddress) {
+        try {
+            const transactionHash = await getTransactionHashFromContractAddress(contractAddress);
+            if (transactionHash) {
+                // Now we have the transaction hash, we can use it to get the block number
+                const txReceipt = await web3.eth.getTransactionReceipt(transactionHash);
+                if (txReceipt) {
+                    console.log(`Block Height of Contract Deployment (Tx Hash: ${transactionHash}):`, txReceipt.blockNumber.toString());
+                    res.send(txReceipt.blockNumber.toString())
+                } else {
+                    console.log(`Transaction with hash ${transactionHash} not found or not confirmed yet.`);
+                }
+            } else {
+                console.log('Unable to find transaction hash for contract deployment.');
+            }
+        } catch (error) {
+            console.error(`Error getting the block height of Contract Deployment:`, error);
         }
-      } else {
-        console.log('Unable to find transaction hash for contract deployment.');
-      }
-    } catch (error) {
-      console.error(`Error getting the block height of Contract Deployment:`, error);
     }
-  }
-  
-  getContractDeploymentBlock(contractAddress);
+
+    getContractDeploymentBlock(contractAddress);
+
 })
+
+
 
 // 404 Route - Page Not Found
 app.use((req, res, next) => {
