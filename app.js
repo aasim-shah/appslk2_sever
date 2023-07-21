@@ -50,7 +50,7 @@ app.get('/fetch/token_holders/:tokenId/:blockCount', async (req, res) => {
         .get(apiUrl, { headers })
         .then((response) => {
             console.log(response.data);
-            return res.status(200).send(response.data.data.items);
+            return res.status(200).json({data : response.data.data.items  , CoinBlockNumber });
         })
         .catch((error) => {
             console.error('Error making the API call:', error.message);
