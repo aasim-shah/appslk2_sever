@@ -176,32 +176,50 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
             },
         });
 
-        // success
-        // (500,000,000/marketcap) * (circulating Supply/max Supply
-
-
+   
         const isConditionMet = (item) => {
-            const marketCap = item.quote.USD.market_cap;
-            console.log({marketCap})
-            const circulatingSupply = item.circulating_supply;
-            const maxSupply = item.max_supply;
+            const marketCap = Number(item.quote.USD.market_cap)
+            const circulatingSupply = Number(item.circulating_supply);
+            const maxSupply = Number(item.max_supply);
           
-            console.log({circulatingSupply})
-            console.log({maxSupply})
-            // Calculate the value of the condition: (500,000,000 / marketCap) * (circulatingSupply / maxSupply)
-            const conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
+            conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
+            conditionValue == Infinity ?  conditionValue=0 : conditionValue
+            conditionValue == NaN ?  conditionValue=0 : conditionValue
+            return  conditionValue > 0;
+        };
+
           
-            // Check if the condition value is greater than or equal to 1
-            return conditionValue >= 1;
-          };
+        const filteredItems2 = response.data.data.filter(isConditionMet);
+
+          function addIsPotentialField(array) {
+            const newArray = array.map((item) => {
+              const volume24h = parseInt(item.quote.USD.volume_24h);
+              const marketCap = Number(item.quote.USD.market_cap)
+              console.log({marketCap})
+              const circulatingSupply = Number(item.circulating_supply);
+              const maxSupply = Number(item.max_supply);
+            
+              console.log({volume24h})
+              console.log({circulatingSupply})
+              console.log({maxSupply})
+              // Calculate the value of the condition: (500,000,000 / marketCap) * (circulatingSupply / maxSupply)
+               conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
+              conditionValue == Infinity ?  conditionValue=0 : conditionValue
+              conditionValue == NaN ?  conditionValue=0 : conditionValue
+              console.log({conditionValue})
+              console.log({conditionValue})
+              let potential = conditionValue;
+              
+              // Return a new object with the new field included
+              return { ...item, potential };
+            });
           
-          // Use Array.filter() to filter items that meet the condition
-          const filteredItems = response.data.data.filter(isConditionMet);
-          console.log({filteredItems})
-        // const data = response.data.data;
-        // console.log({data})
-        res.json(filteredItems);
-    } catch (error) {
+            return newArray;
+          }
+          const newArray = addIsPotentialField(filteredItems2);
+
+        res.json(newArray)
+        } catch (error) {
         // error
         console.error(error);
         res.status(500).json({ error: 'An error occurred while fetching data.' });
