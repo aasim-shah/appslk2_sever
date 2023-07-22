@@ -121,16 +121,44 @@ app.get('/fetch/info/:id', async (req, res) => {
                 'X-CMC_PRO_API_KEY': apiKey,
             },
         });
+        // console.log({response : response.data})
 
         // success
         const data = response.data.data[`${id}`].logo;
         res.json(data);
     } catch (error) {
         // error
-        console.log(error);
+        // console.log(error);
         res.status(500).json({ error: 'An error occurred while fetching data.' });
     }
 });
+
+
+app.post("/fetch/postInfo", async(req ,res) =>{
+    const arry = req.body;
+    const newarry = arry.join(',')
+    console.log({newarry})
+    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
+    const url = `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?id=${newarry}`
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                'X-CMC_PRO_API_KEY': apiKey,
+            },
+        });
+        console.log({response : response.data})
+
+        // success  
+        const data = response.data.data
+        const arrayOfObjects = Object.values(data);
+        res.json(arrayOfObjects);
+    } catch (error) {
+        // error
+        console.log("error");
+        console.log(error);
+        // res.status(500).json({ error: 'An error occurred while fetching data.' });
+    }
+})
 
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/latestWithPlatform/:platform/:limit', async (req, res) => {
