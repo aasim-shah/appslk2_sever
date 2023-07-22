@@ -186,7 +186,7 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
             conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
             conditionValue == Infinity ?  conditionValue=0 : conditionValue
             conditionValue == NaN ?  conditionValue=0 : conditionValue
-            return  conditionValue > 0 && volume24h > 5000000;
+            return  conditionValue > 0 && volume24h > 5000000 && marketCap < 500000000;
         };
 
           
