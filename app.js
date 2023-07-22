@@ -110,55 +110,11 @@ app.get('/fetch/map', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching data.' });
     }
 });
-app.get('/fetch/info/:id', async (req, res) => {
-    const { id } = req.params
-    // const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c'; //test keys
-    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
-    const url = `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?id=${id}`
-    try {
-        const response = await axios.get(url, {
-            headers: {
-                'X-CMC_PRO_API_KEY': apiKey,
-            },
-        });
-        // console.log({response : response.data})
-
-        // success
-        const data = response.data.data[`${id}`].logo;
-        res.json(data);
-    } catch (error) {
-        // error
-        // console.log(error);
-        res.status(500).json({ error: 'An error occurred while fetching data.' });
-    }
-});
 
 
-app.post("/fetch/postInfo", async(req ,res) =>{
-    const arry = req.body;
-    const newarry = arry.join(',')
-    console.log({newarry})
-    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
-    const url = `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?id=${newarry}`
-    try {
-        const response = await axios.get(url, {
-            headers: {
-                'X-CMC_PRO_API_KEY': apiKey,
-            },
-        });
-        console.log({response : response.data})
 
-        // success  
-        const data = response.data.data
-        const arrayOfObjects = Object.values(data);
-        res.json(arrayOfObjects);
-    } catch (error) {
-        // error
-        console.log("error");
-        console.log(error);
-        // res.status(500).json({ error: 'An error occurred while fetching data.' });
-    }
-})
+
+
 
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/latestWithPlatform/:platform/:limit', async (req, res) => {
@@ -202,6 +158,49 @@ app.get('/fetch/latestWithoutPlatform/:limit', async (req, res) => {
         // success
         const data = response.data.data;
         res.json(data);
+    } catch (error) {
+        // error
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching data.' });
+    }
+});
+// New route for fetching data from CoinMarketCap API
+app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
+    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
+    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${req.params.limit}`
+
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                'X-CMC_PRO_API_KEY': apiKey,
+            },
+        });
+
+        // success
+        // (500,000,000/marketcap) * (circulating Supply/max Supply
+
+
+        const isConditionMet = (item) => {
+            const marketCap = item.quote.USD.market_cap;
+            console.log({marketCap})
+            const circulatingSupply = item.circulating_supply;
+            const maxSupply = item.max_supply;
+          
+            console.log({circulatingSupply})
+            console.log({maxSupply})
+            // Calculate the value of the condition: (500,000,000 / marketCap) * (circulatingSupply / maxSupply)
+            const conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
+          
+            // Check if the condition value is greater than or equal to 1
+            return conditionValue >= 1;
+          };
+          
+          // Use Array.filter() to filter items that meet the condition
+          const filteredItems = response.data.data.filter(isConditionMet);
+          console.log({filteredItems})
+        // const data = response.data.data;
+        // console.log({data})
+        res.json(filteredItems);
     } catch (error) {
         // error
         console.error(error);
