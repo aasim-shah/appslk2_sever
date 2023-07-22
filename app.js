@@ -145,8 +145,10 @@ app.get('/fetch/latestWithPlatform/:platform/:limit', async (req, res) => {
 });
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/latestWithoutPlatform/:limit', async (req, res) => {
+    const nnlimit = Number(req.params.limit)
+
     const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
-    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${req.params.limit}`
+    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${nnlimit}`
 
     try {
         const response = await axios.get(url, {
