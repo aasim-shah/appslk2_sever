@@ -166,8 +166,11 @@ app.get('/fetch/latestWithoutPlatform/:limit', async (req, res) => {
 });
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
-    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
-    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${req.params.limit}`
+    console.log({rd : req.params.limit})
+    // const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
+    const nnlimit = Number(req.params.limit)
+    const apiKey = '2b5029aa-bce3-45b7-8263-2138b2868993';
+    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${nnlimit}&market_cap_min=500000000&volume_24h_max=5000000`
 
     try {
         const response = await axios.get(url, {
@@ -178,19 +181,11 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
 
    
         const isConditionMet = (item) => {
-            const marketCap = Number(item.quote.USD.market_cap)
-            const circulatingSupply = Number(item.circulating_supply);
-            const maxSupply = Number(item.max_supply);
-            const volume24h = parseInt(item.quote.USD.volume_24h);
-
-            conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
-            conditionValue == Infinity ?  conditionValue=0 : conditionValue
-            conditionValue == NaN ?  conditionValue=0 : conditionValue
-            return  conditionValue > 0 && volume24h > 5000000 && marketCap < 500000000;
+                console.log({item :item.potential})
+            return  Number(item.potential) > 1;
         };
 
           
-        const filteredItems2 = response.data.data.filter(isConditionMet);
 
           function addIsPotentialField(array) {
             const newArray = array.map((item) => {
@@ -204,7 +199,7 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
               console.log({circulatingSupply})
               console.log({maxSupply})
               // Calculate the value of the condition: (500,000,000 / marketCap) * (circulatingSupply / maxSupply)
-               conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
+               conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply)*4;
               conditionValue == Infinity ?  conditionValue=0 : conditionValue
               conditionValue == NaN ?  conditionValue=0 : conditionValue
               console.log({conditionValue})
@@ -217,9 +212,10 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
           
             return newArray;
           }
-          const newArray = addIsPotentialField(filteredItems2);
+          const newArray = addIsPotentialField(response.data.data);
+          const filteredItems2 = newArray.filter(isConditionMet);
 
-        res.json(newArray)
+        res.json(filteredItems2)
         } catch (error) {
         // error
         console.error(error);
