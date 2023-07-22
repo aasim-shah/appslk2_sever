@@ -181,11 +181,12 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
             const marketCap = Number(item.quote.USD.market_cap)
             const circulatingSupply = Number(item.circulating_supply);
             const maxSupply = Number(item.max_supply);
-          
+            const volume24h = parseInt(item.quote.USD.volume_24h);
+
             conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply);
             conditionValue == Infinity ?  conditionValue=0 : conditionValue
             conditionValue == NaN ?  conditionValue=0 : conditionValue
-            return  conditionValue > 0;
+            return  conditionValue > 0 && volume24h > 5000000;
         };
 
           
