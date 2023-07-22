@@ -170,7 +170,7 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
     // const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
     const nnlimit = Number(req.params.limit)
     const apiKey = '2b5029aa-bce3-45b7-8263-2138b2868993';
-    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${nnlimit}&market_cap_min=500000000&volume_24h_max=5000000`
+    const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=${nnlimit}&market_cap_max=500000000&volume_24h_max=5000000`
 
     try {
         const response = await axios.get(url, {
