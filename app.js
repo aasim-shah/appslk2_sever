@@ -6,11 +6,15 @@ const axios = require('axios');
 const { Web3 } = require('web3');
 // const os = require('os');
 // const net = require('net');
+
+const Moralis = require("moralis").default;
+const { EvmChain } = require("@moralisweb3/common-evm-utils");
 // const ethers = require("ethers")
 
 const app = express();
 const web3 = new Web3("https://mainnet.infura.io/v3/3ada41439dc8493d98ef08873b1f8b26");
 
+const infuraKey  = "3ada41439dc8493d98ef08873b1f8b26"
 // const endpoint = "https://fabled-wiser-tree.discover.quiknode.pro/9290e904b3d8dfec35d8e209d1189ca50778bb8d/"
 
 const PORT = process.env.PORT || 5000;
@@ -26,6 +30,13 @@ app.use(cors({
 
 }))
 app.use(bodyParser.urlencoded({ extended: true }));
+ Moralis.start({
+    // apiKey: "c5a8089e-911d-4a46-92c9-86f128519c23",
+    apiKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyNDM3MzZjLTQ2ZWUtNDFjOS1hOWRmLTQxOTc0YzEyMjEzNyIsIm9yZ0lkIjoiMzQ5NzI5IiwidXNlcklkIjoiMzU5NDY5IiwidHlwZUlkIjoiYzVhODA4OWUtOTExZC00YTQ2LTkyYzktODZmMTI4NTE5YzIzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE2OTAxMzgzMTIsImV4cCI6NDg0NTg5ODMxMn0.ifxAO0Ouu49U9wAwP0UZKzPOJtom0mouiiOCXDqR6Zs",
+    // ...and any other configuration
+  }).then(res =>{
+    console.log('worsali is running')
+  });
 
 
 // Initial route
@@ -166,6 +177,146 @@ app.get('/fetch/latestWithoutPlatform/:limit', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching data.' });
     }
 });
+
+
+
+
+
+app.get("/fetch/tokenwise_inflows" , async (req ,res) => {
+
+  const address = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984";
+
+  const chain = EvmChain.ETHEREUM;
+
+  const response = await Moralis.EvmApi.token.getTokenTransfers({
+    address,
+    chain,
+  });
+const dataa = response.toJSON()
+
+
+
+function parseISODate(timestamp) {
+  return new Date(timestamp);
+}
+
+// Function to round the time to the nearest 1 hour
+function roundToNearestHour(timestamp) {
+  const date = new Date(timestamp);
+  date.setMinutes(0);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
+  date.setHours(date.getHours() - (date.getHours() % 1));
+
+  return date;
+}
+function roundToNearest3Hours(timestamp) {
+    const date = new Date(timestamp);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    date.setHours(date.getHours() - (date.getHours() % 3));
+    return date;
+  }
+
+  // Function to round the time to the nearest 24 hours
+function roundToNearest24Hours(timestamp) {
+    const date = new Date(timestamp);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    date.setHours(0);
+    return date;
+  }
+// Function to group data by 1-hour timeframe
+function groupDataBy1Hour(data) {
+    const groupedData = {};
+    data.forEach(entry => {
+      const timestamp = parseISODate(entry.block_timestamp);
+      const roundedHour = roundToNearestHour(timestamp);
+  
+      // Create a unique key for the 1-hour timeframe
+      const key = roundedHour.toISOString();
+  
+      // Calculate the sum of values for the 1-hour timeframe
+      if (!groupedData[key]) {
+        groupedData[key] = 0;
+      }
+      groupedData[key] += parseFloat(entry.value);
+    });
+  
+    return groupedData;
+  }
+
+// Function to group data by 3-hour timeframe
+function groupDataBy3Hours(data) {
+    const groupedData = {};
+    data.forEach(entry => {
+      const timestamp = parseISODate(entry.block_timestamp);
+      const roundedHour = roundToNearestHour(timestamp);
+      const rounded3Hour = new Date(roundedHour);
+      rounded3Hour.setHours(roundedHour.getHours() - (roundedHour.getHours() % 3));
+  
+      // Create a unique key for the 3-hour timeframe
+      const key = rounded3Hour.toISOString();
+  
+      // Calculate the sum of values for the 3-hour timeframe
+      if (!groupedData[key]) {
+        groupedData[key] = 0;
+      }
+      groupedData[key] += parseFloat(entry.value);
+    });
+  
+    return groupedData;
+  }
+  function groupDataBy24Hours(data) {
+    const groupedData = {};
+    data.forEach(entry => {
+      const timestamp = parseISODate(entry.block_timestamp);
+      const rounded24Hours = roundToNearest24Hours(timestamp);
+  
+      // Create a unique key for the 24-hour timeframe
+      const key = rounded24Hours.toISOString();
+  
+      // Calculate the sum of values for the 24-hour timeframe
+      if (!groupedData[key]) {
+        groupedData[key] = 0;
+      }
+      groupedData[key] += parseFloat(entry.value);
+    });
+  
+    return groupedData;
+  }
+
+// Call the function and get the data grouped by 1-hour timeframe
+const dataGroupedBy1Hour = groupDataBy1Hour(dataa.result);
+const dataGroupedBy3Hours = groupDataBy3Hours(dataa.result);
+const dataGroupedBy24Hours = groupDataBy24Hours(dataa.result);
+
+
+  
+
+// Loop through the data array and add a new field 'value_1_hour' for the 1-hour value
+dataa.result.forEach(entry => {
+    const timestamp = parseISODate(entry.block_timestamp);
+    const roundedHour = roundToNearestHour(timestamp);
+    const rounded3Hour = roundToNearest3Hours(timestamp);
+    const rounded24Hours = roundToNearest24Hours(timestamp);
+    const key1Hour = roundedHour.toISOString();
+    const key3Hours = rounded3Hour.toISOString();
+    const key24Hours = rounded24Hours.toISOString();
+  
+    // Create new fields 'value_1_hour', 'value_3_hours', and 'value_24_hours' and set them to the respective time frame values
+    entry.value_1_hour = dataGroupedBy1Hour[key1Hour];
+    entry.value_3_hours = dataGroupedBy3Hours[key3Hours];
+    entry.value_24_hours = dataGroupedBy24Hours[key24Hours];
+  });
+  
+
+  
+  res.json(dataa.result)
+});
+
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
     console.log({rd : req.params.limit})
@@ -224,169 +375,36 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching data.' });
     }
 });
-// New route for fetching data from CoinMarketCap API
-app.get('/fetch/trending', async (req, res) => {
-    // const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c'; //test keys
-    const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
-    const url = 'https://api.coingecko.com/api/v3/search/trending'
-    try {
-        const response = await axios.get(url);
-
-        // success
-        const data = response.data.coins;
-        console.log({ data })
-        res.json(data);
-    } catch (error) {
-        // error
-        console.error(error);
-        res.status(500).json({ error: 'An error occurred while fetching data.' + error });
-    }
-});
-
-
-
-// New route for fetching data from CoinMarketCap API
-app.get('/fetch/most-visited', async (req, res) => {
-    const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c';
-    const url = 'https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/trending/most-visited';
-
-    try {
-        const response = await axios.get(url, {
-            headers: {
-                'X-CMC_PRO_API_KEY': apiKey,
-            },
-        });
-
-        // success
-        const json = response.data;
-        res.json(json);
-    } catch (error) {
-        // error
-        console.error(error);
-        res.status(500).json({ error: 'An error occurred while fetching data.' });
-    }
-});
-
-
-
-// New route for fetching data from CoinMarketCap API
-app.get('/fetch/gainers-losers', async (req, res) => {
-    const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c';
-    const url = 'https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/trending/gainers-losers';
-
-    try {
-        const response = await axios.get(url, {
-            headers: {
-                'X-CMC_PRO_API_KEY': apiKey,
-            },
-        });
-
-        // success
-        const json = response.data;
-        res.json(json);
-    } catch (error) {
-        // error
-        console.error(error);
-        res.status(500).json({ error: 'An error occurred while fetching data.' });
-    }
-});
 
 
 
 
-app.get('/graphql', async (req, res) => {
-    const query = `
-    query {
-      ethereum {
-        collection(contractAddress: "0x4d224452801ACEd8B2F0aebE155379bb5D594381") {
-          
-            metaData
-          symbol
-          totalSupply
-        }
-      }
-    }
-  `;
-    axios.post('https://api.quicknode.com/graphql', { query }, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': 'QN_277d11c4acfb4ce5abc2b9b116d4f9f6',
-        },
-    })
-        .then(response => {
-            console.log(response);
-            res.json(response.data)
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-        });
+// // New route for fetching data from CoinMarketCap API
+// app.get('/fetch/tokenwise_inflows', async (req, res) => {
+//     const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c';
+//     const url = 'https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/trending/most-visited';
 
-})
+//     try {
+//         const response = await axios.get(url, {
+//             headers: {
+//                 'X-CMC_PRO_API_KEY': apiKey,
+//             },
+//         });
+
+//         // success
+//         const json = response.data;
+//         res.json(json);
+//     } catch (error) {
+//         // error
+//         console.error(error);
+//         res.status(500).json({ error: 'An error occurred while fetching data.' });
+//     }
+// });
 
 
 
-app.get('/fetch-token-metadata', async (req, res) => {
-    try {
-        const myHeaders = {
-            'Content-Type': 'application/json',
-            'x-qn-api-version': '1',
-        };
-
-        const raw = JSON.stringify({
-            id: 67,
-            jsonrpc: '2.0',
-            method: 'qn_getTokenMetadataByContractAddress',
-            params: {
-                contract: '0x4d224452801ACEd8B2F0aebE155379bb5D594381',
-            },
-        });
-
-        const requestOptions = {
-            method: 'POST',
-            headers: myHeaders,
-            data: raw,
-            url: 'https://fabled-wiser-tree.discover.quiknode.pro/9290e904b3d8dfec35d8e209d1189ca50778bb8d/',
-        };
-
-        const response = await axios(requestOptions);
-        res.send(response.data);
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'An error occurred while fetching data.' });
-    }
-});
 
 
-app.get('/get-eth-block-number', async (req, res) => {
-    try {
-        const myHeaders = {
-            'Content-Type': 'application/json',
-        };
-
-        const raw = JSON.stringify({
-            method: 'eth_blockNumber',
-            params: {
-                contract: "0x63f88a2298a5c4aee3c216aa6d926b184a4b2437"
-            },
-            id: 1,
-            jsonrpc: '2.0',
-        });
-
-        const requestOptions = {
-            method: 'POST',
-            headers: myHeaders,
-            data: raw,
-            url: 'https://fabled-wiser-tree.discover.quiknode.pro/9290e904b3d8dfec35d8e209d1189ca50778bb8d/',
-        };
-
-        const response = await axios(requestOptions);
-        console.log({ response })
-        res.send(response.data);
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'An error occurred while fetching data.' });
-    }
-});
 
 
 
