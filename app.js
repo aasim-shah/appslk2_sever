@@ -35,7 +35,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
     apiKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyNDM3MzZjLTQ2ZWUtNDFjOS1hOWRmLTQxOTc0YzEyMjEzNyIsIm9yZ0lkIjoiMzQ5NzI5IiwidXNlcklkIjoiMzU5NDY5IiwidHlwZUlkIjoiYzVhODA4OWUtOTExZC00YTQ2LTkyYzktODZmMTI4NTE5YzIzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE2OTAxMzgzMTIsImV4cCI6NDg0NTg5ODMxMn0.ifxAO0Ouu49U9wAwP0UZKzPOJtom0mouiiOCXDqR6Zs",
     // ...and any other configuration
   }).then(res =>{
-    console.log('worsali is running')
+    console.log('Moralis is      running')
   });
 
 
@@ -240,9 +240,15 @@ function groupDataBy1Hour(data) {
   
       // Calculate the sum of values for the 1-hour timeframe
       if (!groupedData[key]) {
-        groupedData[key] = 0;
+        //   groupedData[key] = 0;
+        groupedData[key] = {
+            value: 0,
+            decimal_1h: 0, // New field for another value for 1-hour timeframe
+          };
       }
-      groupedData[key] += parseFloat(entry.value);
+    //   groupedData[key] += parseFloat(entry.value);
+    groupedData[key].value += parseFloat(entry.value);
+    groupedData[key].decimal_1h += parseFloat(entry.token_decimals); // Assuming you have another_value field in the data
     });
   
     return groupedData;
@@ -262,9 +268,16 @@ function groupDataBy3Hours(data) {
   
       // Calculate the sum of values for the 3-hour timeframe
       if (!groupedData[key]) {
-        groupedData[key] = 0;
+        // groupedData[key] = 0;
+        groupedData[key] = {
+            value: 0,
+            decimal_3h: 0, // New field for another value for 1-hour timeframe
+          };
+        
       }
-      groupedData[key] += parseFloat(entry.value);
+    //   groupedData[key] += parseFloat(entry.value);
+    groupedData[key].value += parseFloat(entry.value);
+    groupedData[key].decimal_3h += parseFloat(entry.token_decimals); // Assuming you have 
     });
   
     return groupedData;
@@ -280,9 +293,16 @@ function groupDataBy3Hours(data) {
   
       // Calculate the sum of values for the 24-hour timeframe
       if (!groupedData[key]) {
-        groupedData[key] = 0;
+        // groupedData[key] = 0;
+        groupedData[key] = {
+            value: 0,
+            decimal_24h: 0, // New field for another value for 1-hour timeframe
+          };
+        
       }
-      groupedData[key] += parseFloat(entry.value);
+    //   groupedData[key] += parseFloat(entry.value);
+    groupedData[key].value += parseFloat(entry.value);
+    groupedData[key].decimal_24h3 += parseFloat(entry.token_decimals); // Assuming you have 
     });
   
     return groupedData;
@@ -310,12 +330,13 @@ dataa.result.forEach(entry => {
     entry.value_1_hour = dataGroupedBy1Hour[key1Hour];
     entry.value_3_hours = dataGroupedBy3Hours[key3Hours];
     entry.value_24_hours = dataGroupedBy24Hours[key24Hours];
+   
   });
   
 
   
   res.json(dataa.result)
-});
+})
 
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
