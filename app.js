@@ -183,8 +183,8 @@ app.get('/fetch/latestWithoutPlatform/:limit', async (req, res) => {
 
 
 app.get("/fetch/tokenwise_inflows" , async (req ,res) => {
-
   const address = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984";
+//   const address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
   const chain = EvmChain.ETHEREUM;
 
@@ -332,10 +332,34 @@ dataa.result.forEach(entry => {
     entry.value_24_hours = dataGroupedBy24Hours[key24Hours];
    
   });
+
+
+  const initialValue1h = 0;
+  const totalSum1h = dataa.result.reduce((accumulator, currentValue) => {
+    if (currentValue.value_1_hour?.value) {
+      return accumulator + parseFloat(currentValue.value_1_hour.value);
+    }
+    return accumulator;
+  }, initialValue1h)
+
+  const initialValue3h = 0;
+  const totalSum3h = dataa.result.reduce((accumulator, currentValue) => {
+    if (currentValue.value_3_hours?.value) {
+      return accumulator + parseFloat(currentValue.value_3_hours.value);
+    }
+    return accumulator;
+  }, initialValue3h)
+
+  const initialValue24h = 0;
+  const totalSum24h = dataa.result.reduce((accumulator, currentValue) => {
+    if (currentValue.value_24_hours?.value) {
+      return accumulator + parseFloat(currentValue.value_24_hours.value);
+    }
+    return accumulator;
+  }, initialValue24h)
   
 
-  
-  res.json(dataa.result)
+  res.json({items : dataa.result , totalSum1h , totalSum3h , totalSum24h})
 })
 
 // New route for fetching data from CoinMarketCap API
