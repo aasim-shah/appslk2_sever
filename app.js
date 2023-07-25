@@ -362,6 +362,40 @@ dataa.result.forEach(entry => {
   res.json({items : dataa.result , totalSum1h , totalSum3h , totalSum24h})
 })
 
+
+
+app.get("/get_trxs" , async(req, res ) =>{
+    
+    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
+    // const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
+    const { wallet_address, contract_address } = req.params
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/4634841/transactions_v3/`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
+    };
+
+    axios
+        .get(apiUrl, { headers })
+        .then((response) => {
+            console.log(response.data);
+            res.send(response.data.data)
+        })
+        .catch((error) => {
+            console.error('Error making the API call:', error);
+        });
+
+
+})
+
+
+
+
+
+
+
+
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
     console.log({rd : req.params.limit})
