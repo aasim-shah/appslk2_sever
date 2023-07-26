@@ -499,7 +499,7 @@ app.get("/fetch/get_trxs4", async (req, res) => {
                 return true;
               });
               
-              res.json(combinedData)
+              res.json(filterCombined)
             // res.json(filteredArray2.slice(0 , 160))
         })
         .catch((error) => {
