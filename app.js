@@ -6,7 +6,7 @@ const axios = require('axios');
 const { Web3 } = require('web3');
 // const os = require('os');
 // const net = require('net');
-
+const coinData = require('./coinsData.json')
 const Moralis = require("moralis").default;
 const { EvmChain } = require("@moralisweb3/common-evm-utils");
 // const ethers = require("ethers")
@@ -14,7 +14,7 @@ const { EvmChain } = require("@moralisweb3/common-evm-utils");
 const app = express();
 const web3 = new Web3("https://mainnet.infura.io/v3/3ada41439dc8493d98ef08873b1f8b26");
 
-const infuraKey  = "3ada41439dc8493d98ef08873b1f8b26"
+const infuraKey = "3ada41439dc8493d98ef08873b1f8b26"
 // const endpoint = "https://fabled-wiser-tree.discover.quiknode.pro/9290e904b3d8dfec35d8e209d1189ca50778bb8d/"
 
 const PORT = process.env.PORT || 5000;
@@ -30,13 +30,13 @@ app.use(cors({
 
 }))
 app.use(bodyParser.urlencoded({ extended: true }));
- Moralis.start({
+Moralis.start({
     // apiKey: "c5a8089e-911d-4a46-92c9-86f128519c23",
     apiKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjkyNDM3MzZjLTQ2ZWUtNDFjOS1hOWRmLTQxOTc0YzEyMjEzNyIsIm9yZ0lkIjoiMzQ5NzI5IiwidXNlcklkIjoiMzU5NDY5IiwidHlwZUlkIjoiYzVhODA4OWUtOTExZC00YTQ2LTkyYzktODZmMTI4NTE5YzIzIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE2OTAxMzgzMTIsImV4cCI6NDg0NTg5ODMxMn0.ifxAO0Ouu49U9wAwP0UZKzPOJtom0mouiiOCXDqR6Zs",
     // ...and any other configuration
-  }).then(res =>{
+}).then(res => {
     console.log('Moralis is      running')
-  });
+});
 
 
 // Initial route
@@ -45,12 +45,12 @@ app.get('/fetch/token_holders/:tokenId/:blockCount', async (req, res) => {
     console.log(req.params)
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key   
     const { tokenId, blockCount } = req.params
-    const findBlockNumber =  await axios.get(`https://appslk-second.onrender.com/findBlockNumber/${tokenId}`)
+    const findBlockNumber = await axios.get(`https://appslk-second.onrender.com/findBlockNumber/${tokenId}`)
     const CoinBlockNumber = findBlockNumber.data
-    
+
     const NumBlockCount = parseInt(blockCount) + parseInt(CoinBlockNumber)
     console.log(NumBlockCount)
-    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/?block-height=${NumBlockCount ? NumBlockCount : "7644841"}`;   
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/tokens/${tokenId}/token_holders_v2/?block-height=${NumBlockCount ? NumBlockCount : "7644841"}`;
 
     const headers = {
         'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ app.get('/fetch/token_holders/:tokenId/:blockCount', async (req, res) => {
         .get(apiUrl, { headers })
         .then((response) => {
             console.log(response.data);
-            return res.status(200).json({data : response.data.data.items  , CoinBlockNumber });
+            return res.status(200).json({ data: response.data.data.items, CoinBlockNumber });
         })
         .catch((error) => {
             console.error('Error making the API call:', error.message);
@@ -182,190 +182,192 @@ app.get('/fetch/latestWithoutPlatform/:limit', async (req, res) => {
 
 
 
-app.get("/fetch/tokenwise_inflows" , async (req ,res) => {
-  const address = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984";
-//   const address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+app.get("/fetch/tokenwise_inflows", async (req, res) => {
+    const address = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984";
+    //   const address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
-  const chain = EvmChain.ETHEREUM;
+    const chain = EvmChain.ETHEREUM;
 
-  const response = await Moralis.EvmApi.token.getTokenTransfers({
-    address,
-    chain,
-  });
-const dataa = response.toJSON()
-
-
-
-function parseISODate(timestamp) {
-  return new Date(timestamp);
-}
-
-// Function to round the time to the nearest 1 hour
-function roundToNearestHour(timestamp) {
-  const date = new Date(timestamp);
-  date.setMinutes(0);
-  date.setSeconds(0);
-  date.setMilliseconds(0);
-  date.setHours(date.getHours() - (date.getHours() % 1));
-
-  return date;
-}
-function roundToNearest3Hours(timestamp) {
-    const date = new Date(timestamp);
-    date.setMinutes(0);
-    date.setSeconds(0);
-    date.setMilliseconds(0);
-    date.setHours(date.getHours() - (date.getHours() % 3));
-    return date;
-  }
-
-  // Function to round the time to the nearest 24 hours
-function roundToNearest24Hours(timestamp) {
-    const date = new Date(timestamp);
-    date.setMinutes(0);
-    date.setSeconds(0);
-    date.setMilliseconds(0);
-    date.setHours(0);
-    return date;
-  }
-// Function to group data by 1-hour timeframe
-function groupDataBy1Hour(data) {
-    const groupedData = {};
-    data.forEach(entry => {
-      const timestamp = parseISODate(entry.block_timestamp);
-      const roundedHour = roundToNearestHour(timestamp);
-  
-      // Create a unique key for the 1-hour timeframe
-      const key = roundedHour.toISOString();
-  
-      // Calculate the sum of values for the 1-hour timeframe
-      if (!groupedData[key]) {
-        //   groupedData[key] = 0;
-        groupedData[key] = {
-            value: 0,
-            decimal_1h: 0, // New field for another value for 1-hour timeframe
-          };
-      }
-    //   groupedData[key] += parseFloat(entry.value);
-    groupedData[key].value += parseFloat(entry.value);
-    groupedData[key].decimal_1h += parseFloat(entry.token_decimals); // Assuming you have another_value field in the data
+    const response = await Moralis.EvmApi.token.getTokenTransfers({
+        address,
+        chain,
     });
-  
-    return groupedData;
-  }
+    const dataa = response.toJSON()
 
-// Function to group data by 3-hour timeframe
-function groupDataBy3Hours(data) {
-    const groupedData = {};
-    data.forEach(entry => {
-      const timestamp = parseISODate(entry.block_timestamp);
-      const roundedHour = roundToNearestHour(timestamp);
-      const rounded3Hour = new Date(roundedHour);
-      rounded3Hour.setHours(roundedHour.getHours() - (roundedHour.getHours() % 3));
-  
-      // Create a unique key for the 3-hour timeframe
-      const key = rounded3Hour.toISOString();
-  
-      // Calculate the sum of values for the 3-hour timeframe
-      if (!groupedData[key]) {
-        // groupedData[key] = 0;
-        groupedData[key] = {
-            value: 0,
-            decimal_3h: 0, // New field for another value for 1-hour timeframe
-          };
-        
-      }
-    //   groupedData[key] += parseFloat(entry.value);
-    groupedData[key].value += parseFloat(entry.value);
-    groupedData[key].decimal_3h += parseFloat(entry.token_decimals); // Assuming you have 
+
+
+    function parseISODate(timestamp) {
+        return new Date(timestamp);
+    }
+
+    // Function to round the time to the nearest 1 hour
+    function roundToNearestHour(timestamp) {
+        const date = new Date(timestamp);
+        date.setMinutes(0);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        date.setHours(date.getHours() - (date.getHours() % 1));
+
+        return date;
+    }
+    function roundToNearest3Hours(timestamp) {
+        const date = new Date(timestamp);
+        date.setMinutes(0);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        date.setHours(date.getHours() - (date.getHours() % 3));
+        return date;
+    }
+
+    // Function to round the time to the nearest 24 hours
+    function roundToNearest24Hours(timestamp) {
+        const date = new Date(timestamp);
+        date.setMinutes(0);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        date.setHours(0);
+        return date;
+    }
+    // Function to group data by 1-hour timeframe
+    function groupDataBy1Hour(data) {
+        const groupedData = {};
+        data.forEach(entry => {
+            const timestamp = parseISODate(entry.block_timestamp);
+            const roundedHour = roundToNearestHour(timestamp);
+
+            // Create a unique key for the 1-hour timeframe
+            const key = roundedHour.toISOString();
+
+            // Calculate the sum of values for the 1-hour timeframe
+            if (!groupedData[key]) {
+                //   groupedData[key] = 0;
+                groupedData[key] = {
+                    value: 0,
+                    decimal_1h: 0, // New field for another value for 1-hour timeframe
+                };
+            }
+            //   groupedData[key] += parseFloat(entry.value);
+            groupedData[key].value += parseFloat(entry.value);
+            groupedData[key].decimal_1h += parseFloat(entry.token_decimals); // Assuming you have another_value field in the data
+        });
+
+        return groupedData;
+    }
+
+    // Function to group data by 3-hour timeframe
+    function groupDataBy3Hours(data) {
+        const groupedData = {};
+        data.forEach(entry => {
+            const timestamp = parseISODate(entry.block_timestamp);
+            const roundedHour = roundToNearestHour(timestamp);
+            const rounded3Hour = new Date(roundedHour);
+            rounded3Hour.setHours(roundedHour.getHours() - (roundedHour.getHours() % 3));
+
+            // Create a unique key for the 3-hour timeframe
+            const key = rounded3Hour.toISOString();
+
+            // Calculate the sum of values for the 3-hour timeframe
+            if (!groupedData[key]) {
+                // groupedData[key] = 0;
+                groupedData[key] = {
+                    value: 0,
+                    decimal_3h: 0, // New field for another value for 1-hour timeframe
+                };
+
+            }
+            //   groupedData[key] += parseFloat(entry.value);
+            groupedData[key].value += parseFloat(entry.value);
+            groupedData[key].decimal_3h += parseFloat(entry.token_decimals); // Assuming you have 
+        });
+
+        return groupedData;
+    }
+    function groupDataBy24Hours(data) {
+        const groupedData = {};
+        data.forEach(entry => {
+            const timestamp = parseISODate(entry.block_timestamp);
+            const rounded24Hours = roundToNearest24Hours(timestamp);
+
+            // Create a unique key for the 24-hour timeframe
+            const key = rounded24Hours.toISOString();
+
+            // Calculate the sum of values for the 24-hour timeframe
+            if (!groupedData[key]) {
+                // groupedData[key] = 0;
+                groupedData[key] = {
+                    value: 0,
+                    decimal_24h: 0, // New field for another value for 1-hour timeframe
+                };
+
+            }
+            //   groupedData[key] += parseFloat(entry.value);
+            groupedData[key].value += parseFloat(entry.value);
+            groupedData[key].decimal_24h3 += parseFloat(entry.token_decimals); // Assuming you have 
+        });
+
+        return groupedData;
+    }
+
+    // Call the function and get the data grouped by 1-hour timeframe
+    const dataGroupedBy1Hour = groupDataBy1Hour(dataa.result);
+    const dataGroupedBy3Hours = groupDataBy3Hours(dataa.result);
+    const dataGroupedBy24Hours = groupDataBy24Hours(dataa.result);
+
+
+
+
+    // Loop through the data array and add a new field 'value_1_hour' for the 1-hour value
+    dataa.result.forEach(entry => {
+        const timestamp = parseISODate(entry.block_timestamp);
+        const roundedHour = roundToNearestHour(timestamp);
+        const rounded3Hour = roundToNearest3Hours(timestamp);
+        const rounded24Hours = roundToNearest24Hours(timestamp);
+        const key1Hour = roundedHour.toISOString();
+        const key3Hours = rounded3Hour.toISOString();
+        const key24Hours = rounded24Hours.toISOString();
+
+        // Create new fields 'value_1_hour', 'value_3_hours', and 'value_24_hours' and set them to the respective time frame values
+        entry.value_1_hour = dataGroupedBy1Hour[key1Hour];
+        entry.value_3_hours = dataGroupedBy3Hours[key3Hours];
+        entry.value_24_hours = dataGroupedBy24Hours[key24Hours];
+
     });
-  
-    return groupedData;
-  }
-  function groupDataBy24Hours(data) {
-    const groupedData = {};
-    data.forEach(entry => {
-      const timestamp = parseISODate(entry.block_timestamp);
-      const rounded24Hours = roundToNearest24Hours(timestamp);
-  
-      // Create a unique key for the 24-hour timeframe
-      const key = rounded24Hours.toISOString();
-  
-      // Calculate the sum of values for the 24-hour timeframe
-      if (!groupedData[key]) {
-        // groupedData[key] = 0;
-        groupedData[key] = {
-            value: 0,
-            decimal_24h: 0, // New field for another value for 1-hour timeframe
-          };
-        
-      }
-    //   groupedData[key] += parseFloat(entry.value);
-    groupedData[key].value += parseFloat(entry.value);
-    groupedData[key].decimal_24h3 += parseFloat(entry.token_decimals); // Assuming you have 
-    });
-  
-    return groupedData;
-  }
-
-// Call the function and get the data grouped by 1-hour timeframe
-const dataGroupedBy1Hour = groupDataBy1Hour(dataa.result);
-const dataGroupedBy3Hours = groupDataBy3Hours(dataa.result);
-const dataGroupedBy24Hours = groupDataBy24Hours(dataa.result);
 
 
-  
+    const initialValue1h = 0;
+    const totalSum1h = dataa.result.reduce((accumulator, currentValue) => {
+        if (currentValue.value_1_hour?.value) {
+            return accumulator + parseFloat(currentValue.value_1_hour.value);
+        }
+        return accumulator;
+    }, initialValue1h)
 
-// Loop through the data array and add a new field 'value_1_hour' for the 1-hour value
-dataa.result.forEach(entry => {
-    const timestamp = parseISODate(entry.block_timestamp);
-    const roundedHour = roundToNearestHour(timestamp);
-    const rounded3Hour = roundToNearest3Hours(timestamp);
-    const rounded24Hours = roundToNearest24Hours(timestamp);
-    const key1Hour = roundedHour.toISOString();
-    const key3Hours = rounded3Hour.toISOString();
-    const key24Hours = rounded24Hours.toISOString();
-  
-    // Create new fields 'value_1_hour', 'value_3_hours', and 'value_24_hours' and set them to the respective time frame values
-    entry.value_1_hour = dataGroupedBy1Hour[key1Hour];
-    entry.value_3_hours = dataGroupedBy3Hours[key3Hours];
-    entry.value_24_hours = dataGroupedBy24Hours[key24Hours];
-   
-  });
+    const initialValue3h = 0;
+    const totalSum3h = dataa.result.reduce((accumulator, currentValue) => {
+        if (currentValue.value_3_hours?.value) {
+            return accumulator + parseFloat(currentValue.value_3_hours.value);
+        }
+        return accumulator;
+    }, initialValue3h)
+
+    const initialValue24h = 0;
+    const totalSum24h = dataa.result.reduce((accumulator, currentValue) => {
+        if (currentValue.value_24_hours?.value) {
+            return accumulator + parseFloat(currentValue.value_24_hours.value);
+        }
+        return accumulator;
+    }, initialValue24h)
 
 
-  const initialValue1h = 0;
-  const totalSum1h = dataa.result.reduce((accumulator, currentValue) => {
-    if (currentValue.value_1_hour?.value) {
-      return accumulator + parseFloat(currentValue.value_1_hour.value);
-    }
-    return accumulator;
-  }, initialValue1h)
-
-  const initialValue3h = 0;
-  const totalSum3h = dataa.result.reduce((accumulator, currentValue) => {
-    if (currentValue.value_3_hours?.value) {
-      return accumulator + parseFloat(currentValue.value_3_hours.value);
-    }
-    return accumulator;
-  }, initialValue3h)
-
-  const initialValue24h = 0;
-  const totalSum24h = dataa.result.reduce((accumulator, currentValue) => {
-    if (currentValue.value_24_hours?.value) {
-      return accumulator + parseFloat(currentValue.value_24_hours.value);
-    }
-    return accumulator;
-  }, initialValue24h)
-  
-
-  res.json({items : dataa.result , totalSum1h , totalSum3h , totalSum24h})
+    res.json({ items: dataa.result, totalSum1h, totalSum3h, totalSum24h })
 })
 
 
+let vsiteCount = 0;
+app.get("/fetch/get_trxs", async (req, res) => {
+    vsiteCount += 1
+    console.log('first', vsiteCount)
 
-app.get("/get_trxs" , async(req, res ) =>{
-    
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
     // const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
     const { wallet_address, contract_address } = req.params
@@ -379,8 +381,126 @@ app.get("/get_trxs" , async(req, res ) =>{
     axios
         .get(apiUrl, { headers })
         .then((response) => {
-            console.log(response.data);
-            res.send(response.data.data)
+            let dd = response.data.data.items
+
+            const myArray = [];
+            for (const key in dd) {
+                myArray.push(dd[key]);
+            }
+
+            const filteredArray = myArray.filter((item, index) => item.log_events)
+            const filteredArray2 = filteredArray.filter((item, index) => item.to_address === item.log_events[0].sender_address)
+
+            // console.log(myArray);
+            //   console.log({filteredArray})
+            //   console.log({filteredArray2 : filteredArray[0].log_events[0].sender_address})
+            //   console.log({filteredArray2 })
+            //   console.log({ to : item.to_address})
+            //   console.log({ from : item.log_events[0]})
+            res.json(filteredArray2.slice(0, 160))
+        })
+        .catch((error) => {
+            console.error('Error making the API call:', error);
+        });
+
+
+})
+
+app.get("/fetch/get_trxs4", async (req, res) => {
+    console.log('get_trxs4')
+    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
+    // const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
+    const { wallet_address, contract_address } = req.params
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/4634841/transactions_v3/`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
+    };
+
+    axios
+        .get(apiUrl, { headers })
+        .then(async (response) => {
+            let dd = response.data.data.items
+
+            // const url = `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=1000`
+
+            // const resp = await axios.get(url, {
+            //     headers: {
+            //         'X-CMC_PRO_API_KEY': '1ea3b0ed-d724-4d2b-82e9-00602b124e8b',
+            //     },
+            // });
+
+            // const coinData = resp.data.data
+            
+
+            const myArray = [];
+            for (const key in dd) {
+                myArray.push(dd[key]);
+            }
+
+            const filteredArray = myArray.filter((item, index) => item.log_events)
+            //   const filterByContract =   myArray.filter((item, index) =>item.to_address === myArray[0].)
+            //   const filteredArray2 =   filteredArray.filter((item, index) =>item.to_address === item.log_events[0].sender_address)
+
+            // console.log(myArray);
+            //   console.log({filteredArray})
+            //   console.log({filteredArray2 : filteredArray[0].log_events[0].sender_address})
+            //   console.log({filteredArray2 })
+            //   console.log({ to : item.to_address})
+            //   console.log({ from : item.log_events[0]})
+
+
+            // Group the array based on the 'contract_address' field
+            const groupedData = filteredArray.reduce((groups, item) => {
+                const address = item.to_address;
+                if (!groups[address]) {
+                    groups[address] = [];
+                }
+                groups[address].push(item);
+                return groups;
+            }, {});
+
+            // Convert the groupedData object into an array of objects with 'contract_address' as key
+            const resultArray = Object.keys(groupedData).map(address => ({
+                contract_address: address,
+                data: groupedData[address],
+            }));
+
+
+            // res.json(resultArray)
+            const filteredCoins = coinData.filter((item, index) => item.platform)
+
+            const combinedData = filteredCoins.map(coinItem => {
+                const contractAddress = coinItem.platform.token_address;
+                const matchingGroup = resultArray.find(groupItem => groupItem.contract_address === contractAddress);
+
+                if (matchingGroup) {
+                    return {
+                        ...coinItem,
+                        data: matchingGroup.data,
+                    };
+                }
+
+                return undefined; // If there's no matching group, add the coinItem without additional data
+            });
+
+            // console.log(combinedData);
+            function hasNonNullProperties(obj) {
+                return Object.values(obj).some(value => value !== null);
+              }
+              
+              // Use filter() to remove explicit null values and objects with all null properties
+              const filterCombined = combinedData.filter(item => {
+                if (item == null) return false; // Remove explicit null values
+                if (typeof item == 'object') {
+                  return hasNonNullProperties(item); // Check if the object has non-null properties
+                }
+                return true;
+              });
+              
+              res.json(combinedData)
+            // res.json(filteredArray2.slice(0 , 160))
         })
         .catch((error) => {
             console.error('Error making the API call:', error);
@@ -398,7 +518,7 @@ app.get("/get_trxs" , async(req, res ) =>{
 
 // New route for fetching data from CoinMarketCap API
 app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
-    console.log({rd : req.params.limit})
+    console.log({ rd: req.params.limit })
     // const apiKey = '1ea3b0ed-d724-4d2b-82e9-00602b124e8b';
     const nnlimit = Number(req.params.limit)
     const apiKey = '2b5029aa-bce3-45b7-8263-2138b2868993';
@@ -411,44 +531,44 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
             },
         });
 
-   
+
         const isConditionMet = (item) => {
-                console.log({item :item.potential})
-            return  Number(item.potential) > 1;
+            console.log({ item: item.potential })
+            return Number(item.potential) > 1;
         };
 
-          
 
-          function addIsPotentialField(array) {
+
+        function addIsPotentialField(array) {
             const newArray = array.map((item) => {
-              const volume24h = parseInt(item.quote.USD.volume_24h);
-              const marketCap = Number(item.quote.USD.market_cap)
-              console.log({marketCap})
-              const circulatingSupply = Number(item.circulating_supply);
-              const maxSupply = Number(item.max_supply);
-            
-              console.log({volume24h})
-              console.log({circulatingSupply})
-              console.log({maxSupply})
-              // Calculate the value of the condition: (500,000,000 / marketCap) * (circulatingSupply / maxSupply)
-               conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply)*4;
-              conditionValue == Infinity ?  conditionValue=0 : conditionValue
-              conditionValue == NaN ?  conditionValue=0 : conditionValue
-              console.log({conditionValue})
-              console.log({conditionValue})
-              let potential = conditionValue;
-              
-              // Return a new object with the new field included
-              return { ...item, potential };
+                const volume24h = parseInt(item.quote.USD.volume_24h);
+                const marketCap = Number(item.quote.USD.market_cap)
+                console.log({ marketCap })
+                const circulatingSupply = Number(item.circulating_supply);
+                const maxSupply = Number(item.max_supply);
+
+                console.log({ volume24h })
+                console.log({ circulatingSupply })
+                console.log({ maxSupply })
+                // Calculate the value of the condition: (500,000,000 / marketCap) * (circulatingSupply / maxSupply)
+                conditionValue = (500000000 / marketCap) * (circulatingSupply / maxSupply) * 4;
+                conditionValue == Infinity ? conditionValue = 0 : conditionValue
+                conditionValue == NaN ? conditionValue = 0 : conditionValue
+                console.log({ conditionValue })
+                console.log({ conditionValue })
+                let potential = conditionValue;
+
+                // Return a new object with the new field included
+                return { ...item, potential };
             });
-          
+
             return newArray;
-          }
-          const newArray = addIsPotentialField(response.data.data);
-          const filteredItems2 = newArray.filter(isConditionMet);
+        }
+        const newArray = addIsPotentialField(response.data.data);
+        const filteredItems2 = newArray.filter(isConditionMet);
 
         res.json(filteredItems2)
-        } catch (error) {
+    } catch (error) {
         // error
         console.error(error);
         res.status(500).json({ error: 'An error occurred while fetching data.' });
@@ -458,27 +578,6 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
 
 
 
-// // New route for fetching data from CoinMarketCap API
-// app.get('/fetch/tokenwise_inflows', async (req, res) => {
-//     const apiKey = 'b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c';
-//     const url = 'https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/trending/most-visited';
-
-//     try {
-//         const response = await axios.get(url, {
-//             headers: {
-//                 'X-CMC_PRO_API_KEY': apiKey,
-//             },
-//         });
-
-//         // success
-//         const json = response.data;
-//         res.json(json);
-//     } catch (error) {
-//         // error
-//         console.error(error);
-//         res.status(500).json({ error: 'An error occurred while fetching data.' });
-//     }
-// });
 
 
 
@@ -487,9 +586,9 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
 
 
 
-app.get("/findBlockNumber/:contractAddress", async (req,res) =>{
+app.get("/findBlockNumber/:contractAddress", async (req, res) => {
 
-    const {contractAddress} = req.params
+    const { contractAddress } = req.params
     const etherScanApi = "DCTDFUMBRUUDBY7E9YXI7US45TB7HEU9B1"
     async function getTransactionHashFromContractAddress(contractAddress) {
         try {
