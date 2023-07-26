@@ -539,6 +539,8 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
 
 
 
+
+        
         function addIsPotentialField(array) {
             const newArray = array.map((item) => {
                 const volume24h = parseInt(item.quote.USD.volume_24h);
