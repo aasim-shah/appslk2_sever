@@ -406,6 +406,29 @@ app.get("/fetch/get_trxs", async (req, res) => {
 
 })
 
+
+
+
+app.get('/as' , (req, res) =>{
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const oneHourInSeconds = 3600;
+    const pastHourTimestamp = currentTimestamp - oneHourInSeconds;
+    
+    // Get the latest block number
+    web3.eth.getBlockNumber().then(latestBlockNumber => {
+    let blockNumber = latestBlockNumber;
+    // Calculate the starting block number for the past hour
+    let startingBlockNumber = latestBlockNumber - (oneHourInSeconds / 15); // Assuming an average block time of 15 seconds
+    
+    // Function to process the blocks within the past hour
+    function processBlocks() {
+    if (blockNumber < startingBlockNumber) {
+    console.log("Finished processing blocks within the past hour.");
+    return;
+    }
+}})
+})
+
 app.get("/fetch/get_trxs4", async (req, res) => {
     console.log('get_trxs4')
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
@@ -512,6 +535,71 @@ app.get("/fetch/get_trxs4", async (req, res) => {
 
 
 
+app.get("/fetch/get_trxs6", async (req, res) => {
+    console.log('get_trxs6')
+    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
+    // const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
+    const { wallet_address, contract_address } = req.params
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/4634841/transactions_v3/`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
+    };
+
+    axios
+        .get(apiUrl, { headers })
+        .then(async (response) => {
+            let dd = response.data.data.items
+        
+
+            const myArray = [];
+            for (const key in dd) {
+                myArray.push(dd[key]);
+            }
+
+            const filteredArray = myArray.filter((item, index) => item.log_events)
+          
+            const groupedData = filteredArray.reduce((groups, item) => {
+                const address = item.to_address;
+                if (!groups[address]) {
+                    groups[address] = [];
+                }
+                groups[address].push(item);
+                return groups;
+            }, {});
+
+            // Convert the groupedData object into an array of objects with 'contract_address' as key
+            const resultArray = Object.keys(groupedData).map(address => ({
+                contract_address: address,
+                data: groupedData[address],
+            }));
+
+
+          
+            // function hasNonNullProperties(obj) {
+            //     return Object.values(obj).some(value => value !== null);
+            //   }
+              
+            //   // Use filter() to remove explicit null values and objects with all null properties
+            //   const filterCombined = combinedData.filter(item => {
+            //     if (item == null) return false; // Remove explicit null values
+            //     if (typeof item == 'object') {
+            //       return hasNonNullProperties(item); // Check if the object has non-null properties
+            //     }
+            //     return true;
+            //   });
+              
+              res.json(resultArray)
+            
+        })
+        .catch((error) => {
+            console.error('Error making the API call:', error);
+        });
+
+
+})
+
 
 
 
@@ -540,7 +628,7 @@ app.get('/fetch/tokensWithPotential/:limit', async (req, res) => {
 
 
 
-        
+
         function addIsPotentialField(array) {
             const newArray = array.map((item) => {
                 const volume24h = parseInt(item.quote.USD.volume_24h);
