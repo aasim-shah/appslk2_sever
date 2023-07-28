@@ -364,36 +364,10 @@ app.get("/fetch/tokenwise_inflows", async (req, res) => {
 
 
 app.get("/fetch/get_trxs", async (req, res) => {
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-  
-   
-
-    // return
-
+    console.log('first')
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-    // const address = '0x781229c7a798c33ec788520a6bbe12a79ed657fc'; 
-    // const bbLock = await web3.eth.getBlockNumber().then(latestBlockNumber => {
-        
-    //     let blockNumber = Number(latestBlockNumber);
-    //     let startingBlockNumber = blockNumber - (3600 / 15); // Assuming an average block time of 15 seconds
-
-    //     return startingBlockNumber
-    // })
-
-    const getLatestBlockNumber = async () => {
-        try {
-          const latestBlockNumber = await web3.eth.getBlockNumber();
-          return latestBlockNumber;
-        } catch (error) {
-          console.error('Error fetching latest block number:', error);
-          throw error; // Optional: Rethrow the error if you want to handle it elsewhere.
-        }
-      };
-      let  dd = await getLatestBlockNumber()
-      dd = Number(dd)
-    // console.log({bbLock})
     
-    // console.log({dd})
+    
     
     const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
 
@@ -412,92 +386,101 @@ app.get("/fetch/get_trxs", async (req, res) => {
                 myArray.push(dd[key]);
             }
 
-            const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
+            const filteredArray = myArray.filter((item, index) => item.log_events)
+            const filteredArray2 = filteredArray.filter((item, index) => item.to_address === item.log_events[0].sender_address)
 
-
-       
-            //  res.json(filterARRay)
+            // console.log(myArray);
+            //   console.log({filteredArray})
+            //   console.log({filteredArray2 : filteredArray[0].log_events[0].sender_address})
+            //   console.log({filteredArray2 })
+            //   console.log({ to : item.to_address})
+            //   console.log({ from : item.log_events[0]})
+            res.json(filteredArray2.slice(0, 160))
+        })
+        .catch((error) => {
+            console.error('Error making the API call:', error);
+        });
       
 
-            function getDataForTimeFrame1(dataArray, timeFrameInHours) {
-                // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
-                const maxBlockDifference = timeFrameInHours * 12;
+            // function getDataForTimeFrame1(dataArray, timeFrameInHours) {
+            //     // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
+            //     const maxBlockDifference = timeFrameInHours * 12;
 
-                // Find the highest block_height for the current data array
-                const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
+            //     // Find the highest block_height for the current data array
+            //     const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
 
-                // Calculate the block_height range for the desired time frame
-                const startBlockHeight = highestBlockHeight - maxBlockDifference;
-                const endBlockHeight = highestBlockHeight;
-                // Filter the dataArray based on the block_height range
-                const filteredData = dataArray.filter((item) => {
-                  return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
-                });
+            //     // Calculate the block_height range for the desired time frame
+            //     const startBlockHeight = highestBlockHeight - maxBlockDifference;
+            //     const endBlockHeight = highestBlockHeight;
+            //     // Filter the dataArray based on the block_height range
+            //     const filteredData = dataArray.filter((item) => {
+            //       return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
+            //     });
 
 
 
             
-                const values = filteredData.map((item) => {
-                    let dd = 0;
-                    dd += parseFloat(item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value)
-                    return {
-                        ...item, 
-                      value_1h: dd
-                    };
-                  });
+            //     const values = filteredData.map((item) => {
+            //         let dd = 0;
+            //         dd += parseFloat(item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value)
+            //         return {
+            //             ...item, 
+            //           value_1h: dd
+            //         };
+            //       });
     
-                  return values;
-                }
+            //       return values;
+            //     }
 
 
 
-            function getDataForTimeFrame3(dataArray, timeFrameInHours) {
-                // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
-                const maxBlockDifference = timeFrameInHours * 12;
+            // function getDataForTimeFrame3(dataArray, timeFrameInHours) {
+            //     // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
+            //     const maxBlockDifference = timeFrameInHours * 12;
 
-                // Find the highest block_height for the current data array
-                const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
+            //     // Find the highest block_height for the current data array
+            //     const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
 
-                // Calculate the block_height range for the desired time frame
-                const startBlockHeight = highestBlockHeight - maxBlockDifference;
-                const endBlockHeight = highestBlockHeight;
-                console.log({startBlockHeight})
-                console.log({endBlockHeight})
+            //     // Calculate the block_height range for the desired time frame
+            //     const startBlockHeight = highestBlockHeight - maxBlockDifference;
+            //     const endBlockHeight = highestBlockHeight;
+            //     console.log({startBlockHeight})
+            //     console.log({endBlockHeight})
 
-                // Filter the dataArray based on the block_height range
-                const filteredData = dataArray.filter((item) => {
-                  return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
-                });
-
-
-
-              // Extract the required value and extra field from the filtered data
-              const values = filteredData.map((item) => {
-                return {
-                    ...item, 
-                  value_3h: item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value
-                };
-              });
-
-              return values;
-            }
+            //     // Filter the dataArray based on the block_height range
+            //     const filteredData = dataArray.filter((item) => {
+            //       return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
+            //     });
 
 
 
-              // Usage example for 1 hour time frame
-              const oneHourData = getDataForTimeFrame1(filterARRay, 1);
-              const threeHourData = getDataForTimeFrame3(oneHourData, 24 * 7);
-            //   const oneDayData = getDataForTimeFrame(filterARRay, 24);
-            //   console.log("Data for 1-hour time frame:", oneHourData);
+            //   // Extract the required value and extra field from the filtered data
+            //   const values = filteredData.map((item) => {
+            //     return {
+            //         ...item, 
+            //       value_3h: item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value
+            //     };
+            //   });
 
-              res.json({ threeHourData})
-              // Usage example for 3 hours time frame
-            //   const threeHoursData = getDataForTimeFrame(slicArray, 3);
-            //   console.log("Data for 3-hour time frame:", threeHoursData);
+            //   return values;
+            // }
 
 
 
-        })
+            //   // Usage example for 1 hour time frame
+            //   const oneHourData = getDataForTimeFrame1(filterARRay, 1);
+            //   const threeHourData = getDataForTimeFrame3(oneHourData, 24 * 7);
+            // //   const oneDayData = getDataForTimeFrame(filterARRay, 24);
+            // //   console.log("Data for 1-hour time frame:", oneHourData);
+
+            //   res.json({ threeHourData})
+            //   // Usage example for 3 hours time frame
+            // //   const threeHoursData = getDataForTimeFrame(slicArray, 3);
+            // //   console.log("Data for 3-hour time frame:", threeHoursData);
+
+
+
+        // })
 
 
 
