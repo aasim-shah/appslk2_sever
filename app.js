@@ -366,9 +366,9 @@ app.get("/fetch/tokenwise_inflows", async (req, res) => {
 app.get("/fetch/get_trxs", async (req, res) => {
     console.log('first')
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-    
-    
-    
+
+
+
     const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
 
     const headers = {
@@ -389,98 +389,93 @@ app.get("/fetch/get_trxs", async (req, res) => {
             const filteredArray = myArray.filter((item, index) => item.log_events)
             const filteredArray2 = filteredArray.filter((item, index) => item.to_address === item.log_events[0].sender_address)
 
-            // console.log(myArray);
-            //   console.log({filteredArray})
-            //   console.log({filteredArray2 : filteredArray[0].log_events[0].sender_address})
-            //   console.log({filteredArray2 })
-            //   console.log({ to : item.to_address})
-            //   console.log({ from : item.log_events[0]})
+
             res.json(filteredArray2.slice(0, 160))
         })
         .catch((error) => {
             console.error('Error making the API call:', error);
         });
-      
-
-            // function getDataForTimeFrame1(dataArray, timeFrameInHours) {
-            //     // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
-            //     const maxBlockDifference = timeFrameInHours * 12;
-
-            //     // Find the highest block_height for the current data array
-            //     const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
-
-            //     // Calculate the block_height range for the desired time frame
-            //     const startBlockHeight = highestBlockHeight - maxBlockDifference;
-            //     const endBlockHeight = highestBlockHeight;
-            //     // Filter the dataArray based on the block_height range
-            //     const filteredData = dataArray.filter((item) => {
-            //       return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
-            //     });
 
 
+    // function getDataForTimeFrame1(dataArray, timeFrameInHours) {
+    //     // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
+    //     const maxBlockDifference = timeFrameInHours * 12;
 
-            
-            //     const values = filteredData.map((item) => {
-            //         let dd = 0;
-            //         dd += parseFloat(item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value)
-            //         return {
-            //             ...item, 
-            //           value_1h: dd
-            //         };
-            //       });
-    
-            //       return values;
-            //     }
+    //     // Find the highest block_height for the current data array
+    //     const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
+
+    //     // Calculate the block_height range for the desired time frame
+    //     const startBlockHeight = highestBlockHeight - maxBlockDifference;
+    //     const endBlockHeight = highestBlockHeight;
+    //     // Filter the dataArray based on the block_height range
+    //     const filteredData = dataArray.filter((item) => {
+    //       return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
+    //     });
 
 
 
-            // function getDataForTimeFrame3(dataArray, timeFrameInHours) {
-            //     // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
-            //     const maxBlockDifference = timeFrameInHours * 12;
 
-            //     // Find the highest block_height for the current data array
-            //     const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
+    //     const values = filteredData.map((item) => {
+    //         let dd = 0;
+    //         dd += parseFloat(item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value)
+    //         return {
+    //             ...item, 
+    //           value_1h: dd
+    //         };
+    //       });
 
-            //     // Calculate the block_height range for the desired time frame
-            //     const startBlockHeight = highestBlockHeight - maxBlockDifference;
-            //     const endBlockHeight = highestBlockHeight;
-            //     console.log({startBlockHeight})
-            //     console.log({endBlockHeight})
-
-            //     // Filter the dataArray based on the block_height range
-            //     const filteredData = dataArray.filter((item) => {
-            //       return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
-            //     });
+    //       return values;
+    //     }
 
 
 
-            //   // Extract the required value and extra field from the filtered data
-            //   const values = filteredData.map((item) => {
-            //     return {
-            //         ...item, 
-            //       value_3h: item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value
-            //     };
-            //   });
+    // function getDataForTimeFrame3(dataArray, timeFrameInHours) {
+    //     // Get the maximum block height difference for the given time frame (assuming 12 blocks per hour)
+    //     const maxBlockDifference = timeFrameInHours * 12;
 
-            //   return values;
-            // }
+    //     // Find the highest block_height for the current data array
+    //     const highestBlockHeight = Math.max(...dataArray.map((item) => item.block_height));
 
+    //     // Calculate the block_height range for the desired time frame
+    //     const startBlockHeight = highestBlockHeight - maxBlockDifference;
+    //     const endBlockHeight = highestBlockHeight;
+    //     console.log({startBlockHeight})
+    //     console.log({endBlockHeight})
 
-
-            //   // Usage example for 1 hour time frame
-            //   const oneHourData = getDataForTimeFrame1(filterARRay, 1);
-            //   const threeHourData = getDataForTimeFrame3(oneHourData, 24 * 7);
-            // //   const oneDayData = getDataForTimeFrame(filterARRay, 24);
-            // //   console.log("Data for 1-hour time frame:", oneHourData);
-
-            //   res.json({ threeHourData})
-            //   // Usage example for 3 hours time frame
-            // //   const threeHoursData = getDataForTimeFrame(slicArray, 3);
-            // //   console.log("Data for 3-hour time frame:", threeHoursData);
+    //     // Filter the dataArray based on the block_height range
+    //     const filteredData = dataArray.filter((item) => {
+    //       return item.block_height >= startBlockHeight && item.block_height <= endBlockHeight;
+    //     });
 
 
 
-        // })
+    //   // Extract the required value and extra field from the filtered data
+    //   const values = filteredData.map((item) => {
+    //     return {
+    //         ...item, 
+    //       value_3h: item.log_events && item.log_events[0].decoded  &&  item.log_events[0].decoded.params && item.log_events[0].decoded.params[2]?.value
+    //     };
+    //   });
+
+    //   return values;
+    // }
+
+
+
+    //   // Usage example for 1 hour time frame
+    //   const oneHourData = getDataForTimeFrame1(filterARRay, 1);
+    //   const threeHourData = getDataForTimeFrame3(oneHourData, 24 * 7);
+    // //   const oneDayData = getDataForTimeFrame(filterARRay, 24);
+    // //   console.log("Data for 1-hour time frame:", oneHourData);
+
+    //   res.json({ threeHourData})
+    //   // Usage example for 3 hours time frame
+    // //   const threeHoursData = getDataForTimeFrame(slicArray, 3);
+    // //   console.log("Data for 3-hour time frame:", threeHoursData);
+
+
+
+    // })
 
 
 
@@ -488,34 +483,10 @@ app.get("/fetch/get_trxs", async (req, res) => {
 
 
 
-
-app.get('/findBlock/:hour', async (req, res) => {
-    const currentTimestamp = Math.floor(Date.now() / 1000);
-    const oneHourInSeconds = 3600;
-    const pastHourTimestamp = currentTimestamp - oneHourInSeconds;
-    const { hour } = req.params
-
-    const getblock = async (hour) => {
-        let dd;
-        try {
-            let latestBlockNumber = await web3.eth.getBlockNumber();
-            let blockNumber = Number(latestBlockNumber);
-            let startingBlockNumber = blockNumber - ((hour * 3600) / 15); // Assuming an average block time of 15 seconds
-            dd = startingBlockNumber;
-            return startingBlockNumber;
-        } catch (error) {
-            // Handle any errors that occurred during fetching the block number
-            console.error("Error fetching block number:", error);
-            throw error; // Optional: Rethrow the error if you want to handle it elsewhere.
-        }
-    };
-
-
-    const block = await getblock(hour)
-    console.log({block})
-
+app.get('/codeByAppslk' , async(req ,res) =>{
+    
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/${block}/transactions_v3/`;
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
 
     const headers = {
         'Content-Type': 'application/json',
@@ -533,7 +504,187 @@ app.get('/findBlock/:hour', async (req, res) => {
             }
 
             const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
-            res.json(filterARRay)
+
+    // Assuming you have an array of transactions in your data set
+const transactions =  filterARRay
+  // Function to calculate the time difference in hours between two dates
+  function getHoursDifference(fromDate, toDate) {
+    const diffInMilliseconds = toDate - fromDate;
+    return diffInMilliseconds / (1000 * 60 * 60); // Convert milliseconds to hours
+  }
+  
+  // Function to filter transactions based on the time range
+  function filterTransactionsByTime(transactions, timeRangeInHours) {
+    const currentTime = new Date();
+  
+    return transactions.filter((transaction) => {
+      const transactionTime = new Date(transaction.block_signed_at);
+      return getHoursDifference(transactionTime, currentTime) <= timeRangeInHours;
+    });
+  }
+  
+
+  
+  // Function to calculate aggregate data for a given set of transactions
+  function calculateAggregates(transactions) {
+    let totalTransactions = transactions.length;
+    let totalValue = 0;
+  
+    transactions.forEach((transaction , index) => {
+        console.log({transaction})
+        const cc = transaction.log_events && transaction.log_events[index]?.decoded?.params[2]?.value
+        // console.log({cc})
+      totalValue += cc !== undefined &&  parseInt(cc); // Assuming the value is a string, convert it to an integer
+    });
+  
+    return { totalTransactions, totalValue };
+  }
+  
+  
+  // Function to create the table and display the aggregated data
+  function createTableWithAggregates(transactions) {
+    const tokens = {}; // Object to store token-wise aggregates
+  
+    // Group transactions by sender_name (token)
+    transactions.forEach((transaction) => {
+      const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
+      if (!tokens[tokenName]) {
+        tokens[tokenName] = [];
+      }
+      tokens[tokenName].push(transaction);
+    });
+  
+    console.log({tokens})
+    // Calculate aggregates for each token within different time ranges
+    const tableData = [];
+    for (const tokenName in tokens) {
+      const lastHourTransactions = filterTransactionsByTime(tokens[tokenName], 1);
+      const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName], 120);
+      const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName], 12);
+  
+      const lastHourAggregates = calculateAggregates(lastHourTransactions);
+      const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
+      const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
+  
+      tableData.push({
+        tokenName,
+        lastHourTransactions: lastHourAggregates.totalTransactions,
+        lastHourTransactionsValue: lastHourAggregates.totalValue,
+        last3HoursTransactions: last3HoursAggregates.totalTransactions,
+        last3HoursTransactionsValue: last3HoursAggregates.totalValue,
+        last12HoursTransactions: last12HoursAggregates.totalTransactions,
+        last12HoursTransactionsValue: last12HoursAggregates.totalValue,
+        
+        });
+    }
+  
+    // Display the table (you can customize the display based on your needs)
+    // console.table(tableData);
+    res.json(tableData)
+  }
+  
+//   Call the function with your transactions data
+  createTableWithAggregates(transactions);
+  
+})
+})
+
+
+
+
+app.get('/findBlock/:hour', async (req, res) => {
+    // const currentTimestamp = Math.floor(Date.now() / 1000);
+    // const oneHourInSeconds = 3600;
+    // const pastHourTimestamp = currentTimestamp - oneHourInSeconds;
+    // const { hour } = req.params
+
+    // const getblock = async (hour) => {
+    //     let dd;
+    //     try {
+    //         let latestBlockNumber = await web3.eth.getBlockNumber();
+    //         let blockNumber = Number(latestBlockNumber);
+    //         let startingBlockNumber = blockNumber - ((hour * 3600) / 15); // Assuming an average block time of 15 seconds
+    //         dd = startingBlockNumber;
+    //         return startingBlockNumber;
+    //     } catch (error) {
+    //         // Handle any errors that occurred during fetching the block number
+    //         console.error("Error fetching block number:", error);
+    //         throw error; // Optional: Rethrow the error if you want to handle it elsewhere.
+    //     }
+    // };
+
+
+    // const block = await getblock(hour)
+    // console.log({block})
+
+    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
+    };
+
+    axios
+        .get(apiUrl, { headers })
+        .then((response) => {
+            let dd = response.data.data.items
+
+            const myArray = [];
+            for (const key in dd) {
+                myArray.push(dd[key]);
+            }
+
+            const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
+
+            // Function to modify the structure and bring innermost data to the root object
+            const modifyDataStructure = (data) => {
+                return data.map((rootObj) => {
+                    const newRootObj = { ...rootObj };
+
+                    if (rootObj.log_events && Array.isArray(rootObj.log_events)) {
+                        rootObj.log_events.forEach((innerObj, index) => {
+
+                            if (innerObj.decoded?.params?.length > 0 && Array.isArray(innerObj.decoded?.params) && innerObj.decoded?.params[index]?.name === "value") {
+                                const sumOfValues = innerObj.decoded?.params.reduce((acc, item) => acc + Number( item.value), 0);
+                                newRootObj[`value_${index + 1}_sum`] = sumOfValues;
+
+                                // newRootObj[`value_${index + 1}`] = innerObj.innermostArray.map((item) => item.value);
+                                // delete innerObj.innermostArray;
+
+                            }
+                        });
+                    }
+                    return newRootObj;
+                });
+            };
+
+            // Call the function with your array of objects
+            const modifiedData = modifyDataStructure(filterARRay).slice(0, 20);
+
+
+            const sumNumericalValues = (obj) => {
+                let sum = 0;
+
+                for (const key in obj) {
+                    const value = obj[key];
+                    
+                    if (!isNaN(Number(value))) {
+                        sum += Number(value);
+                    }
+                }
+
+                return sum;
+            };
+
+            const sumValue1 = modifiedData.map((item , ind) => {
+                item.totalSum = sumNumericalValues(`${item.value_+ind}`);
+                return item
+
+            })
+            // res.json(sumValue1[2])
+            console.log(modifiedData.slice(0,10))
+            res.json(filterARRay.slice(0,10))
 
         }).catch(err => console.log(err))
 
