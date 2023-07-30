@@ -231,8 +231,8 @@ app.get("/fetch/tokenwise_inflows", async (req, res) => {
     // Function to group data by 1-hour timeframe
     function groupDataBy1Hour(data) {
         const groupedData = {};
-        data.forEach(entry => {
-            const timestamp = parseISODate(entry.block_signed_at);
+        data.forEach((entry , i) => {
+            const timestamp = parseISODate(entry.logEvent[0].block_signed_at);
             const roundedHour = roundToNearestHour(timestamp);
 
             // Create a unique key for the 1-hour timeframe
@@ -388,6 +388,7 @@ app.get("/fetch/get_trxs", async (req, res) => {
 
             const filteredArray = myArray.filter((item, index) => item.log_events)
             const filteredArray2 = filteredArray.filter((item, index) => item.to_address === item.log_events[0].sender_address)
+            console.log({ filteredArray })
 
 
             res.json(filteredArray2.slice(0, 160))
@@ -483,8 +484,8 @@ app.get("/fetch/get_trxs", async (req, res) => {
 
 
 
-app.get('/codeByAppslk' , async(req ,res) =>{
-    
+app.get('/codeByAppslk', async (req, res) => {
+
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
     const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
 
@@ -505,135 +506,292 @@ app.get('/codeByAppslk' , async(req ,res) =>{
 
             const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
 
-    // Assuming you have an array of transactions in your data set
-const transactions =  filterARRay
-  // Function to calculate the time difference in hours between two dates
-  function getHoursDifference(fromDate, toDate) {
-    const diffInMilliseconds = toDate - fromDate;
-    return diffInMilliseconds / (1000 * 60 * 60); // Convert milliseconds to hours
-  }
-  
-  // Function to filter transactions based on the time range
-  function filterTransactionsByTime(transactions, timeRangeInHours) {
-    const currentTime = new Date();
-  
-    return transactions.filter((transaction) => {
-      const transactionTime = new Date(transaction.block_signed_at);
-      return getHoursDifference(transactionTime, currentTime) <= timeRangeInHours;
-    });
-  }
-  
 
-  
-  // Function to calculate aggregate data for a given set of transactions
-  function calculateAggregates(transactions) {
-    let totalTransactions = transactions.length;
-    let totalValue = 0;
-  
-    transactions.forEach((transaction , index) => {
-        const cc = transaction.log_events && transaction.log_events[index]?.decoded  && transaction.log_events[index]?.decoded?.params[2]?.value
-        // console.log({cc})
-      totalValue += cc !== undefined &&  parseInt(cc); // Assuming the value is a string, convert it to an integer
-    });
-  
-    return { totalTransactions, totalValue };
-  }
-  
-  
-  // Function to create the table and display the aggregated data
-//   function createTableWithAggregates(transactions) {
-//     const tokens = {}; // Object to store token-wise aggregates
-  
-//     // Group transactions by sender_name (token)
-//     transactions.forEach((transaction) => {
-//       const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
-//       if (!tokens[tokenName]) {
-//         tokens[tokenName] = [];
-//       }
-//       tokens[tokenName].push(transaction);
-//     });
-  
-//     console.log({tokens})
-//     // Calculate aggregates for each token within different time ranges
-//     const tableData = [];
-//     for (const tokenName in tokens) {
-//       const lastHourTransactions = filterTransactionsByTime(tokens[tokenName], 1);
-//       const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName], 120);
-//       const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName], 12);
-  
-//       const lastHourAggregates = calculateAggregates(lastHourTransactions);
-//       const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
-//       const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
-  
-//       tableData.push({
-//         tokenName,
-//         lastHourTransactions: lastHourAggregates.totalTransactions,
-//         lastHourTransactionsValue: lastHourAggregates.totalValue,
-//         last3HoursTransactions: last3HoursAggregates.totalTransactions,
-//         last3HoursTransactionsValue: last3HoursAggregates.totalValue,
-//         last12HoursTransactions: last12HoursAggregates.totalTransactions,
-//         last12HoursTransactionsValue: last12HoursAggregates.totalValue,
-        
-//         });
-//     }
-  
-//     // Display the table (you can customize the display based on your needs)
-//     // console.table(tableData);
-//     res.json(tableData)
-//   }
-  
-//   Call the function with your transactions data
-
-
-
-
-
-
-
-
-function createTableWithAggregates(transactions) {
-    const tokens = {}; // Object to store token-wise aggregates
-    
-    // Group transactions by sender_name (token)
-    transactions.forEach((transaction) => {
-        const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
-if (!tokens[tokenName]) {
-    tokens[tokenName] = [];
-    }
-    tokens[tokenName].push(transaction);
-});
-    
-// Calculate aggregates for each token within different time ranges
-const tableData = [];
-for (const tokenName in tokens) {
-    const lastHourTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 1);
-    const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 3);
-    const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 12);
-    
-    // Rest of the code remains unchanged...
-    const lastHourAggregates = calculateAggregates(lastHourTransactions);
-          const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
-          const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
-    
-    tableData.push({
-                tokenName,
-                lastHourTransactions: lastHourAggregates.totalTransactions,
-                last3HoursTransactions: last3HoursAggregates.totalTransactions,
-                last12HoursTransactions: last12HoursAggregates.totalTransactions,
-                lastHourTransactionsValue: lastHourAggregates.totalValue,
-                last3HoursTransactionsValue: last3HoursAggregates.totalValue,
-                last12HoursTransactionsValue: last12HoursAggregates.totalValue,
-                
+            const modifiedResponse = filterARRay.map((data) => {
+                data.log_events?.map((item) => {
+                    const paramsArray = item.decoded?.params?.filter((param) => param.name === "value");;
+                    delete item.decoded?.params;
+                    item.valueParam = paramsArray;
+                    return item;
+                });
+                return data;
             });
-            // Display the table (you can customize the display based on your needs)
-        }
-    console.table(tableData);
-    res.json(tableData)
-}
-createTableWithAggregates(transactions);
 
 
-})
+            // return res.json(modifiedResponse)
+            const filteredData = modifiedResponse.reduce((result, item) => {
+                if (!result[item.tx_hash]) {
+                    result[item.tx_hash];
+                }
+                const filterUSDT = item.log_events?.filter((logEvent) => logEvent.sender_contract_ticker_symbol === "USDT");
+                result[item.tx_hash] = filterUSDT;
+                return result;
+            }, {});
+
+            // const newArray = Object.entries(filteredData).map(([trx_hash, log_events]) => ({ trx_hash, log_events }));
+            const newArray = Object.entries(filteredData).map(([trx_hash, log_events]) => ({ trx_hash, log_events }));
+
+            const filteNewArray = newArray.filter((data) => data.log_events && data.log_events.length > 0);
+
+
+
+
+            // raw response array withtout the log_events
+            const newfilterARRay = filterARRay.map((item) => {
+                // Use object destructuring to create a new object without the log_events property
+                const { log_events, ...newItem } = item;
+                return newItem;
+            });
+
+        
+
+            // return res.json({filteNewArray   }) // render log_eventgs array
+            // return res.json({ newfilterARRay }) // render raw resp without the log_events
+
+
+            function parseISODate(timestamp) {
+                return new Date(timestamp);
+            }
+
+            // Function to round the time to the nearest 1 hour
+            function roundToNearestHour(timestamp) {
+                const date = new Date(timestamp);
+                date.setMinutes(0);
+                date.setSeconds(0);
+                date.setMilliseconds(0);
+                date.setHours(date.getHours() - (date.getHours() % 40));
+
+                return date;
+            }
+
+
+
+
+
+
+
+
+            function groupDataBy1Hour(entry) {
+                const groupedData = {};
+
+                    const timestamp = parseISODate(entry.block_signed_at);
+                    const roundedHour = roundToNearestHour(timestamp);
+
+                    // Create a unique key for the 1-hour timeframe
+                    const key = roundedHour.toISOString();
+
+                    // Calculate the sum of values for the 1-hour timeframe
+                    if (!groupedData[key]) {
+                        groupedData[key] = 0;
+                        // groupedData[key] = {
+                        //     value: 0,
+                        //     decimal_1h: 0, // New field for another value for 1-hour timeframe
+                        // };
+                    }
+                    //   groupedData[key] += parseFloat(entry.value);
+                    // groupedData[key] += parseFloat(entry.log_events[i].valueParam[0].value);
+                    groupedData[key] += parseFloat(entry.valueParam.length > 0 && entry.valueParam[0].value);
+                    // groupedData[key].decimal_1h += parseFloat(entry.token_decimals); // Assuming you have another_value field in the data
+
+                return groupedData;
+            }
+
+
+
+            let dataGroupedBy1Hour
+            for (const obj of filteNewArray) {
+
+                // Loop through the inner array of each object
+                for (const value of obj.log_events) {
+                  console.log(value);
+                   dataGroupedBy1Hour = groupDataBy1Hour(value);
+                   const timestamp = parseISODate(value.block_signed_at);
+                   const roundedHour = roundToNearestHour(timestamp);
+   
+                   const key1Hour = roundedHour.toISOString();
+   
+                   // Create new fields 'value_1_hour', 'value_3_hours', and 'value_24_hours' and set them to the respective time frame values
+                   value.firstHour = dataGroupedBy1Hour[key1Hour];
+
+                }
+              }
+
+
+
+
+
+
+            // Loop through the data array and add a new field 'value_1_hour' for the 1-hour value
+            // filteNewArray.forEach((entry , i) => {
+             
+
+
+            // });
+
+
+
+            res.json(filteNewArray)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // Assuming you have an array of transactions in your data set
+            // const transactions = filterARRay
+            // // Function to calculate the time difference in hours between two dates
+            // function getHoursDifference(fromDate, toDate) {
+            //     const diffInMilliseconds = toDate - fromDate;
+            //     return diffInMilliseconds / (1000 * 60 * 60); // Convert milliseconds to hours
+            // }
+
+            // // Function to filter transactions based on the time range
+            // function filterTransactionsByTime(transactions, timeRangeInHours) {
+            //     const currentTime = new Date();
+
+            //     return transactions.filter((transaction) => {
+            //         const transactionTime = new Date(transaction.block_signed_at);
+            //         return getHoursDifference(transactionTime, currentTime) <= timeRangeInHours;
+            //     });
+            // }
+
+
+
+            // // Function to calculate aggregate data for a given set of transactions
+            // function calculateAggregates(transactions) {
+            //     let totalTransactions = transactions.length;
+            //     let totalValue = 0;
+
+            //     transactions.forEach((transaction, index) => {
+            //         const cc = transaction.log_events && transaction.log_events[index]?.decoded && transaction.log_events[index]?.decoded?.params[2]?.value
+            //         // console.log({cc})
+            //         totalValue += cc !== undefined && parseInt(cc); // Assuming the value is a string, convert it to an integer
+            //     });
+
+            //     return { totalTransactions, totalValue };
+            // }
+
+
+            // Function to create the table and display the aggregated data
+            //   function createTableWithAggregates(transactions) {
+            //     const tokens = {}; // Object to store token-wise aggregates
+
+            //     // Group transactions by sender_name (token)
+            //     transactions.forEach((transaction) => {
+            //       const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
+            //       if (!tokens[tokenName]) {
+            //         tokens[tokenName] = [];
+            //       }
+            //       tokens[tokenName].push(transaction);
+            //     });
+
+            //     console.log({tokens})
+            //     // Calculate aggregates for each token within different time ranges
+            //     const tableData = [];
+            //     for (const tokenName in tokens) {
+            //       const lastHourTransactions = filterTransactionsByTime(tokens[tokenName], 1);
+            //       const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName], 120);
+            //       const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName], 12);
+
+            //       const lastHourAggregates = calculateAggregates(lastHourTransactions);
+            //       const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
+            //       const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
+
+            //       tableData.push({
+            //         tokenName,
+            //         lastHourTransactions: lastHourAggregates.totalTransactions,
+            //         lastHourTransactionsValue: lastHourAggregates.totalValue,
+            //         last3HoursTransactions: last3HoursAggregates.totalTransactions,
+            //         last3HoursTransactionsValue: last3HoursAggregates.totalValue,
+            //         last12HoursTransactions: last12HoursAggregates.totalTransactions,
+            //         last12HoursTransactionsValue: last12HoursAggregates.totalValue,
+
+            //         });
+            //     }
+
+            //     // Display the table (you can customize the display based on your needs)
+            //     // console.table(tableData);
+            //     res.json(tableData)
+            //   }
+
+            //   Call the function with your transactions data
+
+
+
+
+
+
+
+
+            // function createTableWithAggregates(transactions) {
+            //     const tokens = {}; // Object to store token-wise aggregates
+
+            //     // Group transactions by sender_name (token)
+            //     transactions.forEach((transaction) => {
+            //         const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
+            //         if (!tokens[tokenName]) {
+            //             tokens[tokenName] = [];
+            //         }
+            //         tokens[tokenName].push(transaction);
+            //     });
+
+            //     // Calculate aggregates for each token within different time ranges
+            //     const tableData = [];
+            //     for (const tokenName in tokens) {
+            //         const lastHourTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 1);
+            //         const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 3);
+            //         const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 12);
+
+            //         // Rest of the code remains unchanged...
+            //         const lastHourAggregates = calculateAggregates(lastHourTransactions);
+            //         const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
+            //         const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
+
+            //         tableData.push({
+            //             tokenName,
+            //             lastHourTransactions: lastHourAggregates.totalTransactions,
+            //             last3HoursTransactions: last3HoursAggregates.totalTransactions,
+            //             last12HoursTransactions: last12HoursAggregates.totalTransactions,
+            //             lastHourTransactionsValue: lastHourAggregates.totalValue,
+            //             last3HoursTransactionsValue: last3HoursAggregates.totalValue,
+            //             last12HoursTransactionsValue: last12HoursAggregates.totalValue,
+
+            //         });
+            //         // Display the table (you can customize the display based on your needs)
+            //     }
+            //     console.table(tableData);
+            //     res.json(tableData)
+            // }
+            // createTableWithAggregates(transactions);
+
+
+        })
 })
 
 
@@ -693,7 +851,7 @@ app.get('/findBlock/:hour', async (req, res) => {
                         rootObj.log_events.forEach((innerObj, index) => {
 
                             if (innerObj.decoded?.params?.length > 0 && Array.isArray(innerObj.decoded?.params) && innerObj.decoded?.params[index]?.name === "value") {
-                                const sumOfValues = innerObj.decoded?.params.reduce((acc, item) => acc + Number( item.value), 0);
+                                const sumOfValues = innerObj.decoded?.params.reduce((acc, item) => acc + Number(item.value), 0);
                                 newRootObj[`value_${index + 1}_sum`] = sumOfValues;
 
                                 // newRootObj[`value_${index + 1}`] = innerObj.innermostArray.map((item) => item.value);
@@ -715,7 +873,7 @@ app.get('/findBlock/:hour', async (req, res) => {
 
                 for (const key in obj) {
                     const value = obj[key];
-                    
+
                     if (!isNaN(Number(value))) {
                         sum += Number(value);
                     }
@@ -724,14 +882,14 @@ app.get('/findBlock/:hour', async (req, res) => {
                 return sum;
             };
 
-            const sumValue1 = modifiedData.map((item , ind) => {
-                item.totalSum = sumNumericalValues(`${item.value_+ind}`);
+            const sumValue1 = modifiedData.map((item, ind) => {
+                item.totalSum = sumNumericalValues(`${item.value_ + ind}`);
                 return item
 
             })
             // res.json(sumValue1[2])
-            console.log(modifiedData.slice(0,10))
-            res.json(filterARRay.slice(0,10))
+            console.log(modifiedData.slice(0, 10))
+            res.json(filterARRay.slice(0, 10))
 
         }).catch(err => console.log(err))
 
