@@ -797,11 +797,11 @@ app.get('/codeByAppslk', async (req, res) => {
 
 
 
-app.get('/findBlock/:hour', async (req, res) => {
+app.get('/getBlockTrxs/:block', async (req, res) => {
     // const currentTimestamp = Math.floor(Date.now() / 1000);
     // const oneHourInSeconds = 3600;
     // const pastHourTimestamp = currentTimestamp - oneHourInSeconds;
-    // const { hour } = req.params
+    const { block } = req.params
 
     // const getblock = async (hour) => {
     //     let dd;
@@ -823,7 +823,7 @@ app.get('/findBlock/:hour', async (req, res) => {
     // console.log({block})
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/${block}/transactions_v3/`;
 
     const headers = {
         'Content-Type': 'application/json',
@@ -842,54 +842,7 @@ app.get('/findBlock/:hour', async (req, res) => {
 
             const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
 
-            // Function to modify the structure and bring innermost data to the root object
-            const modifyDataStructure = (data) => {
-                return data.map((rootObj) => {
-                    const newRootObj = { ...rootObj };
-
-                    if (rootObj.log_events && Array.isArray(rootObj.log_events)) {
-                        rootObj.log_events.forEach((innerObj, index) => {
-
-                            if (innerObj.decoded?.params?.length > 0 && Array.isArray(innerObj.decoded?.params) && innerObj.decoded?.params[index]?.name === "value") {
-                                const sumOfValues = innerObj.decoded?.params.reduce((acc, item) => acc + Number(item.value), 0);
-                                newRootObj[`value_${index + 1}_sum`] = sumOfValues;
-
-                                // newRootObj[`value_${index + 1}`] = innerObj.innermostArray.map((item) => item.value);
-                                // delete innerObj.innermostArray;
-
-                            }
-                        });
-                    }
-                    return newRootObj;
-                });
-            };
-
-            // Call the function with your array of objects
-            const modifiedData = modifyDataStructure(filterARRay).slice(0, 20);
-
-
-            const sumNumericalValues = (obj) => {
-                let sum = 0;
-
-                for (const key in obj) {
-                    const value = obj[key];
-
-                    if (!isNaN(Number(value))) {
-                        sum += Number(value);
-                    }
-                }
-
-                return sum;
-            };
-
-            const sumValue1 = modifiedData.map((item, ind) => {
-                item.totalSum = sumNumericalValues(`${item.value_ + ind}`);
-                return item
-
-            })
-            // res.json(sumValue1[2])
-            console.log(modifiedData.slice(0, 10))
-            res.json(filterARRay.slice(0, 10))
+            res.json(filterARRay)
 
         }).catch(err => console.log(err))
 
