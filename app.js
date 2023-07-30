@@ -531,8 +531,7 @@ const transactions =  filterARRay
     let totalValue = 0;
   
     transactions.forEach((transaction , index) => {
-        console.log({transaction})
-        const cc = transaction.log_events && transaction.log_events[index]?.decoded?.params[2]?.value
+        const cc = transaction.log_events && transaction.log_events[index]?.decoded  && transaction.log_events[index]?.decoded?.params[2]?.value
         // console.log({cc})
       totalValue += cc !== undefined &&  parseInt(cc); // Assuming the value is a string, convert it to an integer
     });
@@ -542,50 +541,98 @@ const transactions =  filterARRay
   
   
   // Function to create the table and display the aggregated data
-  function createTableWithAggregates(transactions) {
-    const tokens = {}; // Object to store token-wise aggregates
+//   function createTableWithAggregates(transactions) {
+//     const tokens = {}; // Object to store token-wise aggregates
   
-    // Group transactions by sender_name (token)
-    transactions.forEach((transaction) => {
-      const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
-      if (!tokens[tokenName]) {
-        tokens[tokenName] = [];
-      }
-      tokens[tokenName].push(transaction);
-    });
+//     // Group transactions by sender_name (token)
+//     transactions.forEach((transaction) => {
+//       const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
+//       if (!tokens[tokenName]) {
+//         tokens[tokenName] = [];
+//       }
+//       tokens[tokenName].push(transaction);
+//     });
   
-    console.log({tokens})
-    // Calculate aggregates for each token within different time ranges
-    const tableData = [];
-    for (const tokenName in tokens) {
-      const lastHourTransactions = filterTransactionsByTime(tokens[tokenName], 1);
-      const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName], 120);
-      const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName], 12);
+//     console.log({tokens})
+//     // Calculate aggregates for each token within different time ranges
+//     const tableData = [];
+//     for (const tokenName in tokens) {
+//       const lastHourTransactions = filterTransactionsByTime(tokens[tokenName], 1);
+//       const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName], 120);
+//       const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName], 12);
   
-      const lastHourAggregates = calculateAggregates(lastHourTransactions);
-      const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
-      const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
+//       const lastHourAggregates = calculateAggregates(lastHourTransactions);
+//       const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
+//       const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
   
-      tableData.push({
-        tokenName,
-        lastHourTransactions: lastHourAggregates.totalTransactions,
-        lastHourTransactionsValue: lastHourAggregates.totalValue,
-        last3HoursTransactions: last3HoursAggregates.totalTransactions,
-        last3HoursTransactionsValue: last3HoursAggregates.totalValue,
-        last12HoursTransactions: last12HoursAggregates.totalTransactions,
-        last12HoursTransactionsValue: last12HoursAggregates.totalValue,
+//       tableData.push({
+//         tokenName,
+//         lastHourTransactions: lastHourAggregates.totalTransactions,
+//         lastHourTransactionsValue: lastHourAggregates.totalValue,
+//         last3HoursTransactions: last3HoursAggregates.totalTransactions,
+//         last3HoursTransactionsValue: last3HoursAggregates.totalValue,
+//         last12HoursTransactions: last12HoursAggregates.totalTransactions,
+//         last12HoursTransactionsValue: last12HoursAggregates.totalValue,
         
-        });
-    }
+//         });
+//     }
   
-    // Display the table (you can customize the display based on your needs)
-    // console.table(tableData);
-    res.json(tableData)
-  }
+//     // Display the table (you can customize the display based on your needs)
+//     // console.table(tableData);
+//     res.json(tableData)
+//   }
   
 //   Call the function with your transactions data
-  createTableWithAggregates(transactions);
-  
+
+
+
+
+
+
+
+
+function createTableWithAggregates(transactions) {
+    const tokens = {}; // Object to store token-wise aggregates
+    
+    // Group transactions by sender_name (token)
+    transactions.forEach((transaction) => {
+        const tokenName = transaction.log_events?.length > 0 && transaction.log_events[0]?.sender_name;
+if (!tokens[tokenName]) {
+    tokens[tokenName] = [];
+    }
+    tokens[tokenName].push(transaction);
+});
+    
+// Calculate aggregates for each token within different time ranges
+const tableData = [];
+for (const tokenName in tokens) {
+    const lastHourTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 1);
+    const last3HoursTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 3);
+    const last12HoursTransactions = filterTransactionsByTime(tokens[tokenName].slice(), 12);
+    
+    // Rest of the code remains unchanged...
+    const lastHourAggregates = calculateAggregates(lastHourTransactions);
+          const last3HoursAggregates = calculateAggregates(last3HoursTransactions);
+          const last12HoursAggregates = calculateAggregates(last12HoursTransactions);
+    
+    tableData.push({
+                tokenName,
+                lastHourTransactions: lastHourAggregates.totalTransactions,
+                last3HoursTransactions: last3HoursAggregates.totalTransactions,
+                last12HoursTransactions: last12HoursAggregates.totalTransactions,
+                lastHourTransactionsValue: lastHourAggregates.totalValue,
+                last3HoursTransactionsValue: last3HoursAggregates.totalValue,
+                last12HoursTransactionsValue: last12HoursAggregates.totalValue,
+                
+            });
+            // Display the table (you can customize the display based on your needs)
+        }
+    console.table(tableData);
+    res.json(tableData)
+}
+createTableWithAggregates(transactions);
+
+
 })
 })
 
