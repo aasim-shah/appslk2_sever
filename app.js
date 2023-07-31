@@ -485,6 +485,33 @@ app.get("/fetch/get_trxs", async (req, res) => {
 
 
 
+app.get('/newEndPoint', async (req, res) => {
+
+    const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/latest/transactions_v3/`;
+
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${YOUR_API_KEY}`,
+    };
+
+    axios
+        .get(apiUrl, { headers })
+        .then((response) => {
+            let dd = response.data.data.items
+
+            const myArray = [];
+            for (const key in dd) {
+                myArray.push(dd[key]);
+            }
+
+            const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
+            res.json(filterARRay)
+        })
+        })
+
+
+
 app.get('/codeByAppslk', async (req, res) => {
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
@@ -992,12 +1019,12 @@ async function fetchStartingBlockNumber() {
 }
 
 // Call the function once at the beginning to fetch the initial block number
-fetchStartingBlockNumber();
+// fetchStartingBlockNumber();
 
 // Set the interval to perform the required operations
-const interval = 90000000; // 1000 milliseconds (1 second) - or adjust it as needed
+// const interval = 90000000; // 1000 milliseconds (1 second) - or adjust it as needed
 
-let minusBlocks = 0;
+// let minusBlocks = 0;
 // setInterval(() => {
 //   if (startingBlockNumber !== null) {
 //     // startingBlockNumber is available, use it for the operations
