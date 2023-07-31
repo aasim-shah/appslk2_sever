@@ -1,12 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 const cors = require("cors")
 const axios = require('axios');
 const { Web3 } = require('web3');
 // const os = require('os');
 // const net = require('net');
-const coinData = require('./coinsData.json')
+const coinData = require('./coinsdata.json')
 const Moralis = require("moralis").default;
 const { EvmChain } = require("@moralisweb3/common-evm-utils");
 // const ethers = require("ethers")
@@ -231,7 +232,7 @@ app.get("/fetch/tokenwise_inflows", async (req, res) => {
     // Function to group data by 1-hour timeframe
     function groupDataBy1Hour(data) {
         const groupedData = {};
-        data.forEach((entry , i) => {
+        data.forEach((entry, i) => {
             const timestamp = parseISODate(entry.logEvent[0].block_signed_at);
             const roundedHour = roundToNearestHour(timestamp);
 
@@ -543,7 +544,7 @@ app.get('/codeByAppslk', async (req, res) => {
                 return newItem;
             });
 
-        
+
 
             // return res.json({filteNewArray   }) // render log_eventgs array
             // return res.json({ newfilterARRay }) // render raw resp without the log_events
@@ -574,24 +575,24 @@ app.get('/codeByAppslk', async (req, res) => {
             function groupDataBy1Hour(entry) {
                 const groupedData = {};
 
-                    const timestamp = parseISODate(entry.block_signed_at);
-                    const roundedHour = roundToNearestHour(timestamp);
+                const timestamp = parseISODate(entry.block_signed_at);
+                const roundedHour = roundToNearestHour(timestamp);
 
-                    // Create a unique key for the 1-hour timeframe
-                    const key = roundedHour.toISOString();
+                // Create a unique key for the 1-hour timeframe
+                const key = roundedHour.toISOString();
 
-                    // Calculate the sum of values for the 1-hour timeframe
-                    if (!groupedData[key]) {
-                        groupedData[key] = 0;
-                        // groupedData[key] = {
-                        //     value: 0,
-                        //     decimal_1h: 0, // New field for another value for 1-hour timeframe
-                        // };
-                    }
-                    //   groupedData[key] += parseFloat(entry.value);
-                    // groupedData[key] += parseFloat(entry.log_events[i].valueParam[0].value);
-                    groupedData[key] += parseFloat(entry.valueParam.length > 0 && entry.valueParam[0].value);
-                    // groupedData[key].decimal_1h += parseFloat(entry.token_decimals); // Assuming you have another_value field in the data
+                // Calculate the sum of values for the 1-hour timeframe
+                if (!groupedData[key]) {
+                    groupedData[key] = 0;
+                    // groupedData[key] = {
+                    //     value: 0,
+                    //     decimal_1h: 0, // New field for another value for 1-hour timeframe
+                    // };
+                }
+                //   groupedData[key] += parseFloat(entry.value);
+                // groupedData[key] += parseFloat(entry.log_events[i].valueParam[0].value);
+                groupedData[key] += parseFloat(entry.valueParam.length > 0 && entry.valueParam[0].value);
+                // groupedData[key].decimal_1h += parseFloat(entry.token_decimals); // Assuming you have another_value field in the data
 
                 return groupedData;
             }
@@ -603,18 +604,18 @@ app.get('/codeByAppslk', async (req, res) => {
 
                 // Loop through the inner array of each object
                 for (const value of obj.log_events) {
-                  console.log(value);
-                   dataGroupedBy1Hour = groupDataBy1Hour(value);
-                   const timestamp = parseISODate(value.block_signed_at);
-                   const roundedHour = roundToNearestHour(timestamp);
-   
-                   const key1Hour = roundedHour.toISOString();
-   
-                   // Create new fields 'value_1_hour', 'value_3_hours', and 'value_24_hours' and set them to the respective time frame values
-                   value.firstHour = dataGroupedBy1Hour[key1Hour];
+                    console.log(value);
+                    dataGroupedBy1Hour = groupDataBy1Hour(value);
+                    const timestamp = parseISODate(value.block_signed_at);
+                    const roundedHour = roundToNearestHour(timestamp);
+
+                    const key1Hour = roundedHour.toISOString();
+
+                    // Create new fields 'value_1_hour', 'value_3_hours', and 'value_24_hours' and set them to the respective time frame values
+                    value.firstHour = dataGroupedBy1Hour[key1Hour];
 
                 }
-              }
+            }
 
 
 
@@ -623,7 +624,7 @@ app.get('/codeByAppslk', async (req, res) => {
 
             // Loop through the data array and add a new field 'value_1_hour' for the 1-hour value
             // filteNewArray.forEach((entry , i) => {
-             
+
 
 
             // });
@@ -796,57 +797,223 @@ app.get('/codeByAppslk', async (req, res) => {
 
 
 
-
-app.get('/getBlockTrxs/:block', async (req, res) => {
+app.get('/getBlockTrxs', async (req, res) => {
     // const currentTimestamp = Math.floor(Date.now() / 1000);
     // const oneHourInSeconds = 3600;
     // const pastHourTimestamp = currentTimestamp - oneHourInSeconds;
-    const { block } = req.params
-
-    // const getblock = async (hour) => {
-    //     let dd;
-    //     try {
-    //         let latestBlockNumber = await web3.eth.getBlockNumber();
-    //         let blockNumber = Number(latestBlockNumber);
-    //         let startingBlockNumber = blockNumber - ((hour * 3600) / 15); // Assuming an average block time of 15 seconds
-    //         dd = startingBlockNumber;
-    //         return startingBlockNumber;
-    //     } catch (error) {
-    //         // Handle any errors that occurred during fetching the block number
-    //         console.error("Error fetching block number:", error);
-    //         throw error; // Optional: Rethrow the error if you want to handle it elsewhere.
-    //     }
-    // };
+    // const { block } = req.params
 
 
-    // const block = await getblock(hour)
-    // console.log({block})
+    let startingBlockNumber = await web3.eth.getBlockNumber().then(latestBlockNumber => {
+        let blockNumber = Number(latestBlockNumber);
+        let startingBlockNumberx = blockNumber - (3600 / 15); // Assuming an average block time of 15 seconds
+        blockNumberNumberTouse = startingBlockNumberx
+        return startingBlockNumberx
+    })
+
+
+
+    console.log({ startingBlockNumber })
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
-    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/${block}/transactions_v3/`;
+    const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/${startingBlockNumber}/transactions_v3/`;
 
     const headers = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${YOUR_API_KEY}`,
     };
 
-    axios
-        .get(apiUrl, { headers })
-        .then((response) => {
-            let dd = response.data.data.items
 
-            const myArray = [];
-            for (const key in dd) {
-                myArray.push(dd[key]);
+    async function fetchApiResponse() {
+        try {
+            const response = await axios.get(apiUrl, { headers });
+            return response.data.data.items; // Return the data from the API response
+        } catch (error) {
+            console.error('Error fetching API data:', error.message);
+            throw error;
+        }
+    }
+
+
+
+
+    // axios
+    //     .get(apiUrl, { headers })
+    //     .then(async(response) => {
+    let dd = await fetchApiResponse();
+
+
+    if (dd) {
+
+        const myArray = [];
+        for (const key in dd) {
+            myArray.push(dd[key]);
+        }
+
+        const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
+
+
+
+
+
+
+        // Function to read and update the JSON file with the API response
+        async function updateJsonFileWithApiResponse(apiResponse) {
+            try {
+                // Read the existing JSON data from the file (if the file exists)
+                let jsonData = [];
+                if (fs.existsSync('tokenData.json')) {
+                    const fileContent = fs.readFileSync('tokenData.json', 'utf8');
+                    if (fileContent.trim() !== '') {
+                        jsonData = JSON.parse(fileContent);
+                    }
+                }
+
+                // Push the API response data into the JSON array
+                jsonData.push(apiResponse);
+
+                // Write the updated JSON data to the file
+                fs.writeFileSync('tokenData.json', JSON.stringify(jsonData, null, 2));
+                console.log('JSON data updated successfully.');
+                res.send("JSON data updated successfully")
+            } catch (error) {
+                console.error('Error updating JSON file:', error.message);
+                throw error;
             }
+        }
 
-            const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
 
-            res.json(filterARRay)
 
-        }).catch(err => console.log(err))
+        // res.json(filterARRay)
+        // Update the JSON file with the API response
+        await updateJsonFileWithApiResponse(filterARRay);
+    }
+
+
 
 })
+app.get("/findValue", (req, res) => {
+    // Function to read the JSON file and get the data array
+    function getDataArrayFromFile() {
+        try {
+            if (fs.existsSync('tokenData.json')) {
+                const jsonData = require('./tokenData.json');
+                return jsonData;
+            } else {
+                console.log('tokenData.json file does not exist.');
+                return [];
+            }
+        } catch (error) {
+            console.error('Error reading JSON file:', error.message);
+            throw error;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    // Loop through the data array obtained from the file
+
+    // function processDataArray(dataArray) {
+    //     for (const item of dataArray) {
+    //       // Perform operations with each item in the dataArray
+    //     //   console.log(item);
+    //     }
+    //   }
+      
+
+    // Example usage:
+    const [dataArrayFromFile] = getDataArrayFromFile();
+    console.log('lenght' ,  dataArrayFromFile.length)
+
+    function extractValuesFromArray(dataArray) {
+        let valuesArray = [];
+      
+        dataArray.forEach((item ,i) => {
+          if (item.log_events &&  item.log_events[i]?.decoded   && Array.isArray(item.log_events)) {
+            const values = item.log_events.map((event) => event.decoded?.params[2]?.value);
+            valuesArray.push(...values);
+          }
+        });
+      
+        return valuesArray;
+      }
+      
+   
+      const valuesArray = extractValuesFromArray(dataArrayFromFile);
+      console.log(valuesArray);
+      
+
+        // Filter out undefined and null values, and convert strings to numbers
+        function sumValuesFromArray(dataArray) {
+            const valuesArray = extractValuesFromArray(dataArray);
+          
+            // Filter out non-numeric values, and convert strings to numbers
+            const filteredValues = valuesArray
+              .filter((value) => !isNaN(value))
+              .map((value) => parseFloat(value));
+          
+            // Perform the summation using reduce
+            const sum = filteredValues.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+          
+            return sum;
+        }
+ 
+      const totalSum = sumValuesFromArray(dataArrayFromFile);
+      console.log(totalSum);
+    res.json({totalVAlues : valuesArray , totalSum : totalSum.toLocaleString()})
+    // res.json(totalSum.toLocaleString())
+    // processDataArray(dataArrayFromFile);
+})
+
+
+
+
+// Assuming you have the necessary setup for web3 and the web3 instance is available as 'web3'
+
+let startingBlockNumber = null;
+
+// Function to fetch the block number initially and store it in the startingBlockNumber variable
+async function fetchStartingBlockNumber() {
+    try {
+        const latestBlockNumber = await web3.eth.getBlockNumber();
+        startingBlockNumber = Number(latestBlockNumber) - (3600 / 15);
+        console.log('Initial startingBlockNumber:', startingBlockNumber);
+    } catch (error) {
+        console.error('Error fetching starting block number:', error.message);
+    }
+}
+
+// Call the function once at the beginning to fetch the initial block number
+fetchStartingBlockNumber();
+
+// Set the interval to perform the required operations
+const interval = 90000000; // 1000 milliseconds (1 second) - or adjust it as needed
+
+let minusBlocks = 0;
+// setInterval(() => {
+//   if (startingBlockNumber !== null) {
+//     // startingBlockNumber is available, use it for the operations
+//     // For example, log the current blockNumber
+//     minusBlocks +=  1;
+//     const previousBlockNumber = startingBlockNumber - minusBlocks;
+//     console.log({ previousBlockNumber });
+//     axios.get("http://localhost:8000/getBlockTrxs")
+//   } else {
+//     // startingBlockNumber is not available yet, skip the current iteration
+//     console.log('Waiting for initial block number...');
+//   }
+// }, interval);
+
+
+
 
 app.get("/fetch/get_trxs4", async (req, res) => {
     console.log('get_trxs4')
@@ -1159,6 +1326,7 @@ app.get("/findBlockNumber/:contractAddress", async (req, res) => {
 
 
 
+
 // 404 Route - Page Not Found
 app.use((req, res, next) => {
     res.status(404).send('404 - Page Not Found');
@@ -1168,3 +1336,5 @@ app.use((req, res, next) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
