@@ -495,20 +495,113 @@ app.get('/newEndPoint', async (req, res) => {
         Authorization: `Bearer ${YOUR_API_KEY}`,
     };
 
-    axios
-        .get(apiUrl, { headers })
-        .then((response) => {
-            let dd = response.data.data.items
+    try {   
+        const response = await axios
+            .get(apiUrl, { headers })
+        // .then((response) => {
+        let dd = response.data.data.items
 
-            const myArray = [];
-            for (const key in dd) {
-                myArray.push(dd[key]);
+        const myArray = [];
+        for (const key in dd) {
+            myArray.push(dd[key]);
+        }
+
+        const filteredArray = myArray.filter((item, index) => item.log_events)
+        const filteredArray2 = filteredArray.filter((item, index) => item.to_address === item.log_events[0].sender_address)
+       
+        for (const obj of filteredArray) {
+            // Initialize the totalValue variable to store the sum of 'value'
+            let totalValue = 0;
+
+            // Check if 'log_events' exists and is an array
+            if (obj.log_events && Array.isArray(obj.log_events)) {
+                // Loop through each log_event in the 'log_events' array of the current object
+                for (const logEvent of obj.log_events) {
+                    // Check if 'decoded' and 'params' exist and are arrays
+                    if (logEvent.decoded && Array.isArray(logEvent.decoded.params)) {
+                        // Loop through the 'params' array and sum the 'value' field
+                        for (const param of logEvent.decoded.params) {
+                            if (param.name === "value" && !isNaN(Number(param.value))) {
+                                totalValue += Number(param.value);
+                            }
+                        }
+                    }
+                }
             }
 
-            const filterARRay = myArray.filter((item, index) => item.log_events !== null || item.log_events !== undefined)
-            res.json(filterARRay)
-        })
-        })
+            // Add the 'TotalValue' field to the current object
+            obj.TotalParamsValue = totalValue;
+        }
+
+        // console.log(filteredArray);
+        // filteredArray2 = filteredArray
+        // Function to convert the date to "1 Hour Ago" format
+        function formatDateToAgo(dateString) {
+            const blockSignedAt = new Date(dateString);
+            const now = new Date();
+            const timeDifference = Math.floor(
+                (now - blockSignedAt) / (1000 * 60 * 60)
+            ); // Time difference in hours
+
+            if (timeDifference === 1) {
+                return "1 Hour Ago";
+            } else if (timeDifference === 0) {
+                return "1 Hour Ago";
+            } else {
+                return timeDifference + " Hours Ago";
+                // return "1" + "Hours Ago";
+            }
+        }
+
+        // Loop through each object in the array
+        for (const obj of filteredArray) {
+            // Check if 'log_events' exists and is an array
+            if (obj.log_events && Array.isArray(obj.log_events)) {
+                // Loop through each log_event in the 'log_events' array of the current object
+                for (const logEvent of obj.log_events) {
+                    // Check if 'block_signed_at' exists and is a valid date string
+                    if (
+                        logEvent.block_signed_at &&
+                        !isNaN(new Date(logEvent.block_signed_at))
+                    ) {
+                        // Convert the date to "1 Hour Ago" format and add a new field 'timeFrame'
+                        logEvent.timeFrame = formatDateToAgo(logEvent.block_signed_at);
+                    }
+                }
+            }
+        }
+
+        // console.log(filteredArray);
+        function isDesiredTimeFrame(timeFrame) {
+            return /^(1|3|24)\s+Hours\s+Ago$/i.test(timeFrame);
+        }
+
+        // Filter the array and return only objects with the desired timeFrame
+        const filteredData = filteredArray.filter((obj) => {
+            if (obj.log_events && Array.isArray(obj.log_events)) {
+                for (const logEvent of obj.log_events) {
+                    if (logEvent.timeFrame && isDesiredTimeFrame(logEvent.timeFrame)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+        return res.status(200).json({
+            status: true,
+            data: filteredArray
+        });
+    } catch (error) {
+        console.log(error);
+        return res.json({
+            status: false,
+            message: "something completely went wrong.",
+        });
+    }
+
+
+
+})
 
 
 
@@ -919,12 +1012,14 @@ app.get('/getBlockTrxs', async (req, res) => {
 
 
 })
-app.get("/findValue", (req, res) => {
+app.get("/fetch/getOneHourTrxs", (req, res) => {
+    console.log('get one hour')
     // Function to read the JSON file and get the data array
     function getDataArrayFromFile() {
         try {
             if (fs.existsSync('tokenData.json')) {
                 const jsonData = require('./tokenData.json');
+                // return res.json(jsonData)
                 return jsonData;
             } else {
                 console.log('tokenData.json file does not exist.');
@@ -954,50 +1049,165 @@ app.get("/findValue", (req, res) => {
     //     //   console.log(item);
     //     }
     //   }
-      
+
 
     // Example usage:
     const [dataArrayFromFile] = getDataArrayFromFile();
-    console.log('lenght' ,  dataArrayFromFile.length)
+    // console.log({dataArrayFromFile})
 
-    function extractValuesFromArray(dataArray) {
-        let valuesArray = [];
-      
-        dataArray.forEach((item ,i) => {
-          if (item.log_events &&  item.log_events[i]?.decoded   && Array.isArray(item.log_events)) {
-            const values = item.log_events.map((event) => event.decoded?.params[2]?.value);
-            valuesArray.push(...values);
-          }
-        });
-      
-        return valuesArray;
-      }
-      
-   
-      const valuesArray = extractValuesFromArray(dataArrayFromFile);
-      console.log(valuesArray);
-      
 
-        // Filter out undefined and null values, and convert strings to numbers
-        function sumValuesFromArray(dataArray) {
-            const valuesArray = extractValuesFromArray(dataArray);
-          
-            // Filter out non-numeric values, and convert strings to numbers
-            const filteredValues = valuesArray
-              .filter((value) => !isNaN(value))
-              .map((value) => parseFloat(value));
-          
-            // Perform the summation using reduce
-            const sum = filteredValues.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-          
-            return sum;
+    // console.log('lenght', dataArrayFromFile.length)
+    // return res.json(dataArrayFromFile)
+
+
+
+
+
+
+    for (const obj of dataArrayFromFile) {
+        // Initialize the totalValue variable to store the sum of 'value'
+        let totalValue = 0;
+
+        // Check if 'log_events' exists and is an array
+        if (obj.log_events && Array.isArray(obj.log_events)) {
+            // Loop through each log_event in the 'log_events' array of the current object
+            for (const logEvent of obj.log_events) {
+                // Check if 'decoded' and 'params' exist and are arrays
+                if (logEvent.decoded && Array.isArray(logEvent.decoded.params)) {
+                    // Loop through the 'params' array and sum the 'value' field
+                    for (const param of logEvent.decoded.params) {
+                        if (param.name === "value" && !isNaN(Number(param.value))) {
+                            totalValue += Number(param.value);
+                        }
+                    }
+                }
+            }
         }
- 
-      const totalSum = sumValuesFromArray(dataArrayFromFile);
-      console.log(totalSum);
-    res.json({totalVAlues : valuesArray , totalSum : totalSum.toLocaleString()})
-    // res.json(totalSum.toLocaleString())
-    // processDataArray(dataArrayFromFile);
+
+        // Add the 'TotalValue' field to the current object
+        obj.oneHourValue = totalValue;
+    }
+
+    // console.log(dataArrayFromFile);
+    // dataArrayFromFile2 = dataArrayFromFile
+    // Function to convert the date to "1 Hour Ago" format
+    // function formatDateToAgo(dateString) {
+    //     const blockSignedAt = new Date(dateString);
+    //     const now = new Date();
+    //     const timeDifference = Math.floor(
+    //         (now - blockSignedAt) / (1000 * 60 * 60)
+    //     ); // Time difference in hours
+
+    //     if (timeDifference === 1) {
+    //         return "1 Hour Ago";
+    //     } else if (timeDifference === 0) {
+    //         return "1 Hour Ago";
+    //     } else {
+    //         return timeDifference + " Hours Ago";
+    //         // return "1" + "Hours Ago";
+    //     }
+    // }
+
+    // // Loop through each object in the array
+    // for (const obj of dataArrayFromFile) {
+    //     // Check if 'log_events' exists and is an array
+    //     if (obj.log_events && Array.isArray(obj.log_events)) {
+    //         // Loop through each log_event in the 'log_events' array of the current object
+    //         for (const logEvent of obj.log_events) {
+    //             // Check if 'block_signed_at' exists and is a valid date string
+    //             if (
+    //                 logEvent.block_signed_at &&
+    //                 !isNaN(new Date(logEvent.block_signed_at))
+    //             ) {
+    //                 // Convert the date to "1 Hour Ago" format and add a new field 'timeFrame'
+    //                 logEvent.timeFrame = formatDateToAgo(logEvent.block_signed_at);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // // console.log(dataArrayFromFile);
+    // function isDesiredTimeFrame(timeFrame) {
+    //     return /^(1|3|24)\s+Hours\s+Ago$/i.test(timeFrame);
+    // }
+
+    // // Filter the array and return only objects with the desired timeFrame
+    // const filteredData = dataArrayFromFile.filter((obj) => {
+    //     if (obj.log_events && Array.isArray(obj.log_events)) {
+    //         for (const logEvent of obj.log_events) {
+    //             if (logEvent.timeFrame && isDesiredTimeFrame(logEvent.timeFrame)) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // });
+    
+
+
+
+
+    // function extractValuesFromArray(dataArray) {
+
+    //     // dataArray.forEach((item, i) => {
+    //     //     if (item.log_events && item.log_events[i]?.decoded && Array.isArray(item.log_events)) {
+    //     //         const values = item.log_events.map((event) => event.decoded?.params[2]?.value);
+    //     //         valuesArray.push(...values);
+    //     //     }
+    //     // });
+    //     // dataArray.forEach((item, i) => {
+    //     //     if (item.TotalParamsValue) {
+    //     //         console.log(item.TotalParamsValue)
+    //     //         const values = item.TotalParamsValue
+    //     //         valuesArray.push(...values);
+    //     //     }
+    //     // });
+       
+
+
+    //     return dataArray.map((item,ind) => ({item  , value : item.TotalParamsValue}))
+    // }
+
+
+console.log('runnign')
+    // const valuesArray = extractValuesFromArray(dataArrayFromFile);
+    // console.log(valuesArray);
+    // // return res.json(valuesArray)
+
+
+    // // Filter out undefined and null values, and convert strings to numbers
+    // function sumValuesFromArray(dataArray) {
+    //     const valuesArray = extractValuesFromArray(dataArray);
+
+    //     // Filter out non-numeric values, and convert strings to numbers
+    //     const filteredValues = valuesArray
+    //         .filter((value) => !isNaN(value))
+    //         .map((value) => parseFloat(value));
+
+    //     // Perform the summation using reduce
+    //     const sum = filteredValues.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+
+    //     return sum;
+    // }
+
+    // const totalSum = sumValuesFromArray(dataArrayFromFile);
+    // console.log(totalSum);
+
+
+
+    // const totalValues = valuesArray.totalValues;
+
+    // // Use the reduce method to calculate the sum of all the 'value' properties
+    const totalSum = dataArrayFromFile.reduce((accumulator, currentValue) => {
+      // Convert the value to a number before adding it to the accumulator
+      const value = parseFloat(currentValue.oneHourValue);
+      return accumulator + value;
+    }, 0);
+
+
+
+    res.json({ totalVAlues: dataArrayFromFile.slice(0,99) , totalSum})
+
 })
 
 
@@ -1005,18 +1215,18 @@ app.get("/findValue", (req, res) => {
 
 // Assuming you have the necessary setup for web3 and the web3 instance is available as 'web3'
 
-let startingBlockNumber = null;
+// let startingBlockNumber = null;
 
-// Function to fetch the block number initially and store it in the startingBlockNumber variable
-async function fetchStartingBlockNumber() {
-    try {
-        const latestBlockNumber = await web3.eth.getBlockNumber();
-        startingBlockNumber = Number(latestBlockNumber) - (3600 / 15);
-        console.log('Initial startingBlockNumber:', startingBlockNumber);
-    } catch (error) {
-        console.error('Error fetching starting block number:', error.message);
-    }
-}
+// // Function to fetch the block number initially and store it in the startingBlockNumber variable
+// async function fetchStartingBlockNumber() {
+//     try {
+//         const latestBlockNumber = await web3.eth.getBlockNumber();
+//         startingBlockNumber = Number(latestBlockNumber) - (3600 / 15);
+//         console.log('Initial startingBlockNumber:', startingBlockNumber);
+//     } catch (error) {
+//         console.error('Error fetching starting block number:', error.message);
+//     }
+// }
 
 // Call the function once at the beginning to fetch the initial block number
 // fetchStartingBlockNumber();
