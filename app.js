@@ -1037,7 +1037,7 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
             //     return [];
             // }
 
-            const result = await TokenModal.findById('64cb97cfe7801b24c10fcfbd')
+            const result = await TokenModal.findById('64cb97cfe7801b24c10fcfbd').sort({ block_height: -1 });
             const flateArray = result.tokensArray.flat()
             // return res.json(resultArray)
              return flateArray;
