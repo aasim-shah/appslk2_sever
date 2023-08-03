@@ -23,7 +23,6 @@ const PORT = process.env.PORT || 8000;
 
 
 
-
 // Parse JSON and url-encoded bodies
 app.use(bodyParser.json());
 app.use(cors({
@@ -930,10 +929,10 @@ app.get('/getBlockTrxs', async (req, res) => {
         blockNumberNumberTouse = startingBlockNumberx
         return startingBlockNumberx
     })
+    // fetchStartingBlockNumber()
 
 
-
-    console.log({ startingBlockNumber })
+    console.log({getBlockTrxsStrtingBlock :  startingBlockNumber })
 
     const YOUR_API_KEY = 'cqt_rQJpp8VF3QvYYWYHMCTbytwhbF8W'; // Replace this with your actual API key
     const apiUrl = `https://api.covalenthq.com/v1/eth-mainnet/block/${startingBlockNumber}/transactions_v3/`;
@@ -1012,15 +1011,30 @@ app.get('/getBlockTrxs', async (req, res) => {
 
 
 })
-app.get("/fetch/getOneHourTrxs", (req, res) => {
+app.get("/fetch/getOneHourTrxs", async(req, res) => {
+    console.log(req.query)
+    const {timeframe } = req.query
+    const intTimeframe = Number(timeframe)
+    console.log({intTimeframe})
+    
+    let startingBlockNumber = await web3.eth.getBlockNumber().then(latestBlockNumber => {
+        let blockNumber = Number(latestBlockNumber);
+        let startingBlockNumberx = blockNumber - (3600 / 15); // Assuming an average block time of 15 seconds
+        blockNumberNumberTouse = startingBlockNumberx
+        return startingBlockNumberx
+    })
+    console.log({startingBlockNumber})
+
     console.log('get one hour')
     // Function to read the JSON file and get the data array
     function getDataArrayFromFile() {
         try {
             if (fs.existsSync('tokenData.json')) {
                 const jsonData = require('./tokenData.json');
-                // return res.json(jsonData)
-                return jsonData;
+                const flateArray = jsonData.flat()
+                // return res.json(flateArray)
+               
+                return flateArray;
             } else {
                 console.log('tokenData.json file does not exist.');
                 return [];
@@ -1052,19 +1066,25 @@ app.get("/fetch/getOneHourTrxs", (req, res) => {
 
 
     // Example usage:
-    const [dataArrayFromFile] = getDataArrayFromFile();
+    const dataArrayFromFile = getDataArrayFromFile();
     // console.log({dataArrayFromFile})
 
+    const filteredData = dataArrayFromFile.filter((obj) => {
+        return obj.block_height > startingBlockNumber - intTimeframe  && obj.block_height < startingBlockNumber;
+      });
 
+
+    //  return  res.json(filteredData)
     // console.log('lenght', dataArrayFromFile.length)
-    // return res.json(dataArrayFromFile)
+    // return res.json(filteredData)
 
 
 
 
 
 
-    for (const obj of dataArrayFromFile) {
+   if(filteredData && filteredData.length > 0){
+    for (const obj of filteredData) {
         // Initialize the totalValue variable to store the sum of 'value'
         let totalValue = 0;
 
@@ -1088,6 +1108,11 @@ app.get("/fetch/getOneHourTrxs", (req, res) => {
         obj.oneHourValue = totalValue;
     }
 
+
+     return   res.status(200).json(filteredData)
+     
+    }
+    return   res.status(401).send('No data found in the last 1hour')
     // console.log(dataArrayFromFile);
     // dataArrayFromFile2 = dataArrayFromFile
     // Function to convert the date to "1 Hour Ago" format
@@ -1198,15 +1223,61 @@ console.log('runnign')
     // const totalValues = valuesArray.totalValues;
 
     // // Use the reduce method to calculate the sum of all the 'value' properties
-    const totalSum = dataArrayFromFile.reduce((accumulator, currentValue) => {
-      // Convert the value to a number before adding it to the accumulator
-      const value = parseFloat(currentValue.oneHourValue);
-      return accumulator + value;
-    }, 0);
+    // const totalSum = dataArrayFromFile.reduce((accumulator, currentValue) => {
+    //   // Convert the value to a number before adding it to the accumulator
+    //   const value = parseFloat(currentValue.oneHourValue);
+    //   return accumulator + value;
+    // }, 0);
 
 
+    // for (const key in dataArrayFromFile) {
+    //     console.log(`Array for key: ${key}`);
+        
+    //     // Get the inner array for the current key
+    //     const innerArray = dataArrayFromFile[key];
+        
+    //     // Loop through the inner array
+    //     for (const key2 in innerArray) {
+    //         // console.log(`Array for   key2: ${key}`);
+    //         console.log({innerArray})
+           
+    //       }
+    //   }
+    
 
-    res.json({ totalVAlues: dataArrayFromFile.slice(0,99) , totalSum})
+      // Function to group data by sender_name
+//       function groupDataBySenderName(data) {
+// // return res.json(data)
+//         const groupedData = data.reduce((result, transaction) => {
+//         // console.log({transaction})
+//           transaction.log_events?.forEach((logEvent) => {
+//             const senderName = logEvent.sender_name || "Unknown Token";
+//             if (!result[senderName]) {
+//               result[senderName] = [];
+//             }
+//             transaction ,
+//             result[senderName].push(logEvent)
+            
+//           });
+//           return result;
+//         }, {});
+      
+//         return groupedData;
+//       }
+      
+//       // Call the function and get the grouped data
+//       const groupedData = groupDataBySenderName(dataArrayFromFile);
+      
+    //   for (const tokenName of groupedData) {
+    //    res.json(tokenName)
+    // }
+
+      // Print the grouped data
+    //   console.log(groupedData);
+      
+
+
+    // res.json({ totalVAlues:  dataArrayFromFile})
 
 })
 
@@ -1215,7 +1286,9 @@ console.log('runnign')
 
 // Assuming you have the necessary setup for web3 and the web3 instance is available as 'web3'
 
-// let startingBlockNumber = null;
+
+
+let startingBlockNumber = null;
 
 // // Function to fetch the block number initially and store it in the startingBlockNumber variable
 // async function fetchStartingBlockNumber() {
@@ -1227,27 +1300,29 @@ console.log('runnign')
 //         console.error('Error fetching starting block number:', error.message);
 //     }
 // }
+//     fetchStartingBlockNumber();
 
-// Call the function once at the beginning to fetch the initial block number
-// fetchStartingBlockNumber();
+
+
 
 // Set the interval to perform the required operations
-// const interval = 90000000; // 1000 milliseconds (1 second) - or adjust it as needed
+const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
 
-// let minusBlocks = 0;
-// setInterval(() => {
+let minusBlocks = 0;
+setInterval(() => {
 //   if (startingBlockNumber !== null) {
 //     // startingBlockNumber is available, use it for the operations
 //     // For example, log the current blockNumber
 //     minusBlocks +=  1;
 //     const previousBlockNumber = startingBlockNumber - minusBlocks;
 //     console.log({ previousBlockNumber });
-//     axios.get("http://localhost:8000/getBlockTrxs")
+    axios.get("https://appslk-second.onrender.com/getBlockTrxs")
 //   } else {
 //     // startingBlockNumber is not available yet, skip the current iteration
+
 //     console.log('Waiting for initial block number...');
 //   }
-// }, interval);
+}, interval);
 
 
 
