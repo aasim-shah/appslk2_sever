@@ -1316,23 +1316,13 @@ let startingBlockNumber = null;
 
 
 // Set the interval to perform the required operations
-// const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
+const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
 
-// let minusBlocks = 0;
-// setInterval(() => {
-// //   if (startingBlockNumber !== null) {
-// //     // startingBlockNumber is available, use it for the operations
-// //     // For example, log the current blockNumber
-// //     minusBlocks +=  1;
-// //     const previousBlockNumber = startingBlockNumber - minusBlocks;
-// //     console.log({ previousBlockNumber });
-//     axios.get("https://appslk-second.onrender.com/getBlockTrxs")
-// //   } else {
-// //     // startingBlockNumber is not available yet, skip the current iteration
+setInterval(() => {
 
-// //     console.log('Waiting for initial block number...');
-// //   }
-// }, interval);
+    axios.get("https://appslk-second.onrender.com/getBlockTrxs")
+
+}, interval);
 
 
 
