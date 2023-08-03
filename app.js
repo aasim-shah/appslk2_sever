@@ -989,7 +989,8 @@ app.get('/getBlockTrxs', async (req, res) => {
                 }
 
                 // Push the API response data into the JSON array
-                jsonData.push(apiResponse);
+                // console.log({apiResponse})
+                jsonData.push(apiResponse.slice(50));
 
                 // Write the updated JSON data to the file
                 fs.writeFileSync('tokenData.json', JSON.stringify(jsonData, null, 2));
@@ -1041,6 +1042,7 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
             }
         } catch (error) {
             console.error('Error reading JSON file:', error.message);
+            res.json(error)
             throw error;
         }
     }
