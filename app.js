@@ -11,6 +11,7 @@ const coinData = require('./coinsData.json')
 const Moralis = require("moralis").default;
 const { EvmChain } = require("@moralisweb3/common-evm-utils");
 // const ethers = require("ethers")
+const mongoose = require('mongoose')
 
 const app = express();
 const web3 = new Web3("https://mainnet.infura.io/v3/3ada41439dc8493d98ef08873b1f8b26");
@@ -20,8 +21,13 @@ const infuraKey = "3ada41439dc8493d98ef08873b1f8b26"
 
 const PORT = process.env.PORT || 8000;
 
+const tokenSchema = mongoose.Schema({
+    tokensArray : [],
+})
 
+const TokenModal = mongoose.model("Token" , tokenSchema)
 
+ mongoose.connect("mongodb://dls1225sandbox:mysecurepassword@ac-fmtxdsm-shard-00-00.n8vly0w.mongodb.net:27017,ac-fmtxdsm-shard-00-01.n8vly0w.mongodb.net:27017,ac-fmtxdsm-shard-00-02.n8vly0w.mongodb.net:27017/appslk2?ssl=true&replicaSet=atlas-z8wkt0-shard-0&authSource=admin&retryWrites=true&w=majority",  { useNewUrlParser: true, useUnifiedTopology: true }).then(res => {console.log("db connected")}).catch(err => console.log(err));
 
 // Parse JSON and url-encoded bodies
 app.use(bodyParser.json());
@@ -979,24 +985,14 @@ app.get('/getBlockTrxs', async (req, res) => {
         // Function to read and update the JSON file with the API response
         async function updateJsonFileWithApiResponse(apiResponse) {
             try {
-                // Read the existing JSON data from the file (if the file exists)
-                let jsonData = [];
-                if (fs.existsSync('tokenData.json')) {
-                    const fileContent = fs.readFileSync('tokenData.json', 'utf8');
-                    if (fileContent.trim() !== '') {
-                        jsonData = JSON.parse(fileContent);
-                    }
-                }
 
-                // Push the API response data into the JSON array
-                // console.log({apiResponse})
-                jsonData.push(apiResponse.slice(50));
-
-                // Write the updated JSON data to the file
-                fs.writeFileSync('tokenData.json', JSON.stringify(jsonData, null, 2));
-                console.log('JSON data updated successfully.');
-                res.send("JSON data updated successfully")
-            } catch (error) {
+            //  return   res.json(apiResponse)
+                const dbTokens = await TokenModal.findById("64cb97cfe7801b24c10fcfbd")
+                console.log({dbTokens})
+                dbTokens.tokensArray.push([apiResponse])
+                await dbTokens.save()
+              res.send('data saved to db :)')
+            } catch (error) {   
                 console.error('Error updating JSON file:', error.message);
                 throw error;
             }
@@ -1015,12 +1011,12 @@ app.get('/getBlockTrxs', async (req, res) => {
 app.get("/fetch/getOneHourTrxs", async(req, res) => {
     console.log(req.query)
     const {timeframe } = req.query
-    const intTimeframe = Number(timeframe)
+    const intTimeframe = Number(timeframe) || 0
     console.log({intTimeframe})
     
     let startingBlockNumber = await web3.eth.getBlockNumber().then(latestBlockNumber => {
         let blockNumber = Number(latestBlockNumber);
-        let startingBlockNumberx = blockNumber - (3600 / 15); // Assuming an average block time of 15 seconds
+        let startingBlockNumberx = blockNumber - (3600 / 15);
         blockNumberNumberTouse = startingBlockNumberx
         return startingBlockNumberx
     })
@@ -1028,18 +1024,25 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
 
     console.log('get one hour')
     // Function to read the JSON file and get the data array
-    function getDataArrayFromFile() {
+   async function getDataArrayFromFile() {
         try {
-            if (fs.existsSync('tokenData.json')) {
-                const jsonData = require('./tokenData.json');
-                const flateArray = jsonData.flat()
-                // return res.json(flateArray)
+            // if (fs.existsSync('tokenData.json')) {
+            //     const jsonData = require('./tokenData.json');
+            //     const flateArray = jsonData.flat()
+            //     // return res.json(flateArray)
                
-                return flateArray;
-            } else {
-                console.log('tokenData.json file does not exist.');
-                return [];
-            }
+            //     return flateArray;
+            // } else {
+            //     console.log('tokenData.json file does not exist.');
+            //     return [];
+            // }
+
+            const result = await TokenModal.findById('64cb97cfe7801b24c10fcfbd')
+            const flateArray = result.tokensArray.flat()
+            // return res.json(resultArray)
+             return flateArray;
+
+
         } catch (error) {
             console.error('Error reading JSON file:', error.message);
             res.json(error)
@@ -1050,8 +1053,8 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
 
 
 
-
-
+    // getDataArrayFromFile()
+// return
 
 
 
@@ -1068,8 +1071,10 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
 
 
     // Example usage:
-    const dataArrayFromFile = getDataArrayFromFile();
+    const dataArrayFromFile = await getDataArrayFromFile();
     // console.log({dataArrayFromFile})
+    // res.json(dataArrayFromFile)
+    // return 
 
     const filteredData = dataArrayFromFile.filter((obj) => {
         return obj.block_height > startingBlockNumber - intTimeframe  && obj.block_height < startingBlockNumber;
@@ -1111,10 +1116,13 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
     }
 
 
-     return   res.status(200).json(filteredData)
+    const sortedArray3 = filteredData.sort((a, b) =>Number(a.block_height) - Number(b.block_height));
+
+
+     return   res.status(200).json({success : true, filteredData:  sortedArray3})
      
     }
-    return   res.status(401).send('No data found in the last 1hour')
+    return   res.status(200).json({success : false , msg : 'No data found in the last 1hour'})
     // console.log(dataArrayFromFile);
     // dataArrayFromFile2 = dataArrayFromFile
     // Function to convert the date to "1 Hour Ago" format
@@ -1308,23 +1316,23 @@ let startingBlockNumber = null;
 
 
 // Set the interval to perform the required operations
-const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
+// const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
 
-let minusBlocks = 0;
-setInterval(() => {
-//   if (startingBlockNumber !== null) {
-//     // startingBlockNumber is available, use it for the operations
-//     // For example, log the current blockNumber
-//     minusBlocks +=  1;
-//     const previousBlockNumber = startingBlockNumber - minusBlocks;
-//     console.log({ previousBlockNumber });
-    axios.get("https://appslk-second.onrender.com/getBlockTrxs")
-//   } else {
-//     // startingBlockNumber is not available yet, skip the current iteration
+// let minusBlocks = 0;
+// setInterval(() => {
+// //   if (startingBlockNumber !== null) {
+// //     // startingBlockNumber is available, use it for the operations
+// //     // For example, log the current blockNumber
+// //     minusBlocks +=  1;
+// //     const previousBlockNumber = startingBlockNumber - minusBlocks;
+// //     console.log({ previousBlockNumber });
+//     axios.get("https://appslk-second.onrender.com/getBlockTrxs")
+// //   } else {
+// //     // startingBlockNumber is not available yet, skip the current iteration
 
-//     console.log('Waiting for initial block number...');
-//   }
-}, interval);
+// //     console.log('Waiting for initial block number...');
+// //   }
+// }, interval);
 
 
 
