@@ -1037,10 +1037,10 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
             //     return [];
             // }
 
-            const result = await TokenModal.findById('64cb97cfe7801b24c10fcfbd').sort({ block_height: -1 });
+            const result = await TokenModal.findById('64cb97cfe7801b24c10fcfbd')
             const flateArray = result.tokensArray.flat()
             // return res.json(resultArray)
-             return flateArray;
+             return flateArray.slice().sort((a, b) => a.block_height - b.block_height);
 
 
         } catch (error) {
@@ -1072,12 +1072,13 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
 
     // Example usage:
     const dataArrayFromFile = await getDataArrayFromFile();
-    // console.log({dataArrayFromFile})
+    console.log({dataArrayFromFileHeight : dataArrayFromFile.length})
     // res.json(dataArrayFromFile)
     // return 
 
     const filteredData = dataArrayFromFile.filter((obj) => {
-        return obj.block_height > startingBlockNumber - intTimeframe  && obj.block_height < startingBlockNumber;
+        console.log(obj.block_height)
+        return obj.block_height ? obj.block_height : 0 > startingBlockNumber - intTimeframe  && obj.block_height ? obj.block_height : 0 < startingBlockNumber;
       });
 
 
@@ -1116,8 +1117,7 @@ app.get("/fetch/getOneHourTrxs", async(req, res) => {
     }
 
 
-    const sortedArray3 = filteredData.sort((a, b) =>Number(a.block_height) - Number(b.block_height));
-
+    const sortedArray3 = filteredData.slice(0,100)
 
      return   res.status(200).json({success : true, filteredData:  sortedArray3})
      
@@ -1316,13 +1316,13 @@ let startingBlockNumber = null;
 
 
 // Set the interval to perform the required operations
-const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
+// const interval = 16000; // 1000 milliseconds (1 second) - or adjust it as needed
 
-setInterval(() => {
+// setInterval(() => {
 
-    axios.get("https://appslk-second.onrender.com/getBlockTrxs")
+//     axios.get("https://appslk-second.onrender.com/getBlockTrxs")
 
-}, interval);
+// }, interval);
 
 
 
